@@ -1,4 +1,6 @@
 import sys
+import os
+from subprocess import check_output
 from jadsh.constants import *
 
 class Prompt():
@@ -7,5 +9,6 @@ class Prompt():
         self.promptChar = promptChar
 
     def draw(self):
-        sys.stdout.write(self.promptChar + ' ')
+        pwd = check_output(["pwd"])[:-1]
+        sys.stdout.write(pwd + self.promptChar + ' ')
         sys.stdout.flush()

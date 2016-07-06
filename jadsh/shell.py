@@ -6,7 +6,6 @@ import importlib
 import shlex
 from jadsh.prompt import Prompt
 from jadsh.constants import *
-#from jadsh.builtins.exit import exit
 
 class Shell():
  
@@ -14,6 +13,7 @@ class Shell():
         self.status = status
         self.prompt = prompt
         self.builtins = {}
+        self.history = []
         
         self.loop()
 
@@ -59,6 +59,8 @@ class Shell():
 
                 if os.WIFEXITED(status) or os.WIFSIGNALED(status):
                     break
+        
+        self.history.append({ "command": command, "args": args })
 
         # Assume all went well, continue
         return SHELL_STATUS_RUN
