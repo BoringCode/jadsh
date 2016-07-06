@@ -1,4 +1,4 @@
-from jadsh import Shell
+from jadsh.shell import Shell
 
 if __name__ == "__main__":
     shell = Shell()
