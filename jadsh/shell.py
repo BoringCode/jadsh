@@ -29,7 +29,12 @@ class Shell():
             except KeyboardInterrupt:
                 sys.stdout.write("\n" + "Bye!" + "\n")
                 user_input = "exit"
-            
+
+            # Help the user
+            if self.syntax_check(user_input) == False:
+                continue
+           
+            # Allow commands to be split (so user can enter multiple commands at once)
             commands = re.split('[;]+', user_input)
             for cmd in commands:
                 # Get tokens from user input
@@ -46,16 +51,13 @@ class Shell():
 
         # Check if builtin command
         if self.builtin(command):
-            if len(args) > 0:
-                return self.builtins[command](args)
-            else:
-                return self.builtins[command]()
+            return self.builtins[command].execute(self, *args)
        
         # Fork to child process
         pid = os.fork()
 
         if pid == 0:
-            os.execvp(command, tokens)
+            print(os.execvp(command, tokens))
         elif pid > 0:
             while True:
                 wpid, status = os.waitpid(pid, 0)
@@ -72,11 +74,16 @@ class Shell():
         if command in self.builtins: return True
         try:
             mod = importlib.import_module("jadsh.builtins." + command)
-            func = getattr(mod, command)
-            self.builtins[command] = func
+            obj = getattr(mod, command)()
+            self.builtins[command] = obj
             return True
         except ImportError:
             return False
     
     def tokenize(self, command):
         return shlex.split(command)
+
+    def syntax_check(self, user_input):
+        if "&&" in user_input:
+            print("Unsupported use of &&. In jadsh, please use 'COMMAND; and COMMAND'")
+            return False

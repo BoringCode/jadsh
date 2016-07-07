@@ -1,4 +1,7 @@
 from jadsh.constants import *
 
-def exit():
-    return SHELL_STATUS_STOP
+
+class exit:
+
+	def execute(self, parent):
+		return SHELL_STATUS_STOP

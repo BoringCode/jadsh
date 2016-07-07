@@ -9,6 +9,6 @@ class Prompt():
         self.promptChar = promptChar
 
     def draw(self):
-        pwd = check_output(["pwd"])[:-1]
-        sys.stdout.write(pwd + self.promptChar + ' ')
+        pwd = os.getcwd()
+        sys.stdout.write(pwd + ":" + self.promptChar + ' ')
         sys.stdout.flush()
