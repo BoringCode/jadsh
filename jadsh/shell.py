@@ -2,7 +2,6 @@
 
 import os
 import sys
-import subprocess
 import importlib
 import re
 import shlex
@@ -100,7 +99,7 @@ class Shell():
         return tokens
 
     def message(self, title, message, status = False):
-        sys.stdout.write(self.hilite(title, status) + ": ")
+        sys.stdout.write(self.hilite(title + ": ", status))
         sys.stdout.write(message)
         sys.stdout.write("\n")
 

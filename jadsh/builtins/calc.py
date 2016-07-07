@@ -88,6 +88,11 @@ class NumericStringParser(object):
         return val
 
 class calc(Builtin):
+    """
+    calc is a simple program that performs math calculations.
+    Usage: `calc expression`
+    """
+
     def setup(self):
         self.parser = NumericStringParser()
 
@@ -101,7 +106,3 @@ class calc(Builtin):
             except:
                 print(self.shell.hilite("calc error:") + " Can't parse expression")
         return constants.SHELL_STATUS_RUN
-
-    def print_help(self):
-        print("calc is a simple program that performs math calculations.")
-        print("Usage: `calc expression`")
