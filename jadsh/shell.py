@@ -29,7 +29,6 @@ class Shell():
             try:
                 user_input = sys.stdin.readline()
             except KeyboardInterrupt:
-                sys.stdout.write("\n" + "Bye!" + "\n")
                 user_input = "exit"
 
             # Help the user
@@ -45,8 +44,9 @@ class Shell():
                 # Execute command
                 try:
                     self.status = self.execute(tokens)
-                except Exception as e:
+                except OSError as e:
                     print(self.hilite("jadsh error: ") + str(e))
+                    return
 
     def execute(self, tokens):
         if len(tokens) == 0: return SHELL_STATUS_RUN
