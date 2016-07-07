@@ -91,10 +91,16 @@ class calc:
         self.parser = NumericStringParser()
 
     def execute(self, parent, *args):
-        try:
-            expression = ' '.join(args)
-            print(self.parser.eval(expression))
-        except:
-            print(parent.hilite("calc error:") + " Can't parse expression")
+        if "--help" in args:
+            self.print_help()
+        else:
+            try:
+                expression = ' '.join(args)
+                print(self.parser.eval(expression))
+            except:
+                print(parent.hilite("calc error:") + " Can't parse expression")
         return SHELL_STATUS_RUN
 
+    def print_help(self):
+        print("calc is a simple program that performs math calculations.")
+        print("Usage: `calc expression`")
