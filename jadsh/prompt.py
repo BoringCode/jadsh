@@ -1,6 +1,5 @@
 import sys
 import os
-from subprocess import check_output
 from jadsh.constants import *
 
 class Prompt():

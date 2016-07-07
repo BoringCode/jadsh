@@ -21,7 +21,7 @@ pip install -r requirements.txt
 Launch the shell.
 
 ```bash
-python run.py
+./jadsh.py
 ```
 
 ## License

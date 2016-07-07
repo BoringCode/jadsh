@@ -2,6 +2,7 @@
 
 import os
 import sys
+import subprocess
 import importlib
 import re
 import shlex
@@ -29,6 +30,12 @@ class Shell():
             try:
                 user_input = sys.stdin.readline()
             except KeyboardInterrupt:
+                sys.stdout.write("\n")
+                continue
+            except IOError:
+                user_input = "exit"
+
+            if not user_input:
                 user_input = "exit"
 
             # Help the user
@@ -47,6 +54,8 @@ class Shell():
                 except OSError as e:
                     print(self.hilite("jadsh error: ") + str(e))
                     return
+                except KeyboardInterrupt:
+                    continue
 
     def execute(self, tokens):
         if len(tokens) == 0: return SHELL_STATUS_RUN
@@ -107,3 +116,7 @@ class Shell():
 
     def title(self, title):
         sys.stdout.write("\x1b]2;" + title + "\x07")
+
+
+if __name__ == "__main__":
+    shell = Shell()
