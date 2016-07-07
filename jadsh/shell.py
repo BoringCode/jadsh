@@ -3,6 +3,7 @@
 import os
 import sys
 import importlib
+import re
 import shlex
 from jadsh.prompt import Prompt
 from jadsh.constants import *
@@ -24,16 +25,18 @@ class Shell():
 
             # Grab user input
             try:
-                cmd = sys.stdin.readline()
+                user_input = sys.stdin.readline()
             except KeyboardInterrupt:
                 sys.stdout.write("\n" + "Bye!" + "\n")
-                cmd = "exit"
-                
-            # Get tokens from user input
-            tokens = self.tokenize(cmd)
+                user_input = "exit"
+            
+            commands = re.split('[;]+', user_input)
+            for cmd in commands:
+                # Get tokens from user input
+                tokens = self.tokenize(cmd)
 
-            # Execute command
-            self.status = self.execute(tokens)
+                # Execute command
+                self.status = self.execute(tokens)
 
     def execute(self, tokens):
         if len(tokens) == 0: return SHELL_STATUS_RUN
