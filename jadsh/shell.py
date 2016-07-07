@@ -116,7 +116,3 @@ class Shell():
 
     def title(self, title):
         sys.stdout.write("\x1b]2;" + title + "\x07")
-
-
-if __name__ == "__main__":
-    shell = Shell()
