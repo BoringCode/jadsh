@@ -4,7 +4,8 @@ import jadsh.constants as constants
 
 class Prompt():
     def __init__(self, promptChar = "$"):
-        self.promptChar = promptChar
+    	self.home = os.path.expanduser("~")
+    	self.promptChar = promptChar
 
     def draw(self):
         pwd = self.getcwd()
@@ -14,8 +15,7 @@ class Prompt():
 
     def getcwd(self):
     	pwd = os.getcwd()
-    	home = os.path.expanduser("~")
-    	pwd = pwd.replace(home, "~")
+    	pwd = pwd.replace(self.home, "~")
     	return pwd
 
     def title(self, title = "jadsh"): 
