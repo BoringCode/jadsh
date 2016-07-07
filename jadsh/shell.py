@@ -7,11 +7,11 @@ import importlib
 import re
 import shlex
 from jadsh.prompt import Prompt
-from jadsh.constants import *
+import jadsh.constants as constants
 
 class Shell():
  
-    def __init__(self, prompt = Prompt(), status = SHELL_STATUS_RUN):
+    def __init__(self, prompt = Prompt(), status = constants.SHELL_STATUS_RUN):
         self.status = status
         self.prompt = prompt
         self.builtins = {}
@@ -20,7 +20,7 @@ class Shell():
         self.loop()
 
     def loop(self):
-        while self.status == SHELL_STATUS_RUN:
+        while self.status == constants.SHELL_STATUS_RUN:
             self.title("jadsh " + os.getcwd())
 
             # Draw the prompt
@@ -58,14 +58,14 @@ class Shell():
                     continue
 
     def execute(self, tokens):
-        if len(tokens) == 0: return SHELL_STATUS_RUN
+        if len(tokens) == 0: return constants.SHELL_STATUS_RUN
 
         command = tokens[0]
         args = tokens[1:]
 
         # Check if builtin command
         if self.builtin(command):
-            return self.builtins[command].execute(self, *args)
+            return self.builtins[command].execute(*args)
        
         # Fork to child process
         pid = os.fork()
@@ -82,13 +82,13 @@ class Shell():
         self.history.append({ "command": command, "args": args })
 
         # Assume all went well, continue
-        return SHELL_STATUS_RUN
+        return constants.SHELL_STATUS_RUN
 
     def builtin(self, command):
         if command in self.builtins: return True
         try:
             mod = importlib.import_module("jadsh.builtins." + command)
-            obj = getattr(mod, command)()
+            obj = getattr(mod, command)(self)
             self.builtins[command] = obj
             return True
         except ImportError:

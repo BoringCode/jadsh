@@ -1,7 +1,8 @@
 from pyparsing import (Literal, CaselessLiteral, Word, Combine, Group, Optional, ZeroOrMore, Forward, nums, alphas, oneOf)
 import math
 import operator
-from jadsh.constants import *
+import jadsh.constants as constants
+from jadsh.builtin import Builtin
 
 class NumericStringParser(object):
     def pushFirst(self, strg, loc, toks):
@@ -86,11 +87,11 @@ class NumericStringParser(object):
         val = self.evaluateStack(self.exprStack[:])
         return val
 
-class calc:
-    def __init__(self):
+class calc(Builtin):
+    def setup(self):
         self.parser = NumericStringParser()
 
-    def execute(self, parent, *args):
+    def execute(self, *args):
         if "--help" in args:
             self.print_help()
         else:
@@ -98,8 +99,8 @@ class calc:
                 expression = ' '.join(args)
                 print(self.parser.eval(expression))
             except:
-                print(parent.hilite("calc error:") + " Can't parse expression")
-        return SHELL_STATUS_RUN
+                print(self.shell.hilite("calc error:") + " Can't parse expression")
+        return constants.SHELL_STATUS_RUN
 
     def print_help(self):
         print("calc is a simple program that performs math calculations.")

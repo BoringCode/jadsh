@@ -1,9 +1,8 @@
 import sys
 import os
-from jadsh.constants import *
+import jadsh.constants as constants
 
 class Prompt():
-
     def __init__(self, promptChar = "$"):
         self.promptChar = promptChar
 

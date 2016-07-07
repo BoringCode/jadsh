@@ -1,9 +1,8 @@
 import sys
-from jadsh.constants import *
+from jadsh.builtin import Builtin
+import jadsh.constants as constants
 
-
-class exit:
-
-	def execute(self, parent):
+class exit(Builtin):
+	def execute(self):
 		sys.stdout.write("\n" + "Bye!" + "\n")
-		return SHELL_STATUS_STOP
+		return constants.SHELL_STATUS_STOP

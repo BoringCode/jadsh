@@ -1,15 +1,13 @@
 import os
 import sys
-from jadsh.constants import *
+from jadsh.builtin import Builtin
+import jadsh.constants as constants
 
-class reload:
-	def execute(self, parent):
+class reload(Builtin):
+	def execute(self):
 		"""
 		Super ugly way to detect how I should relaunch this thing
 		"""
-		path = os.path.dirname(os.path.realpath(sys.argv[0])) + "/" + os.path.basename(sys.argv[0])
-		if ".py" not in path:
-			path += ".py"
-		os.execvp("python", ["python", path])
-		sys.stdout.flush()
-		return SHELL_STATUS_RUN
+		path = constants.BASE_DIR + "/" + "jadsh.py"
+		# Replace current application with new executable
+		os.execvp("python" + constants.PYTHON_VERSION, ["python" + constants.PYTHON_VERSION, path])
