@@ -21,8 +21,6 @@ class Shell():
 
     def loop(self):
         while self.status == constants.SHELL_STATUS_RUN:
-            self.title("jadsh " + os.getcwd())
-
             # Draw the prompt
             self.prompt.draw()
 
@@ -125,6 +123,3 @@ class Shell():
         if user_input[0] == "$":
             self.message("jadsh error", "Unsupported use of $VARIABLE. In jadsh, variables cannot be used directly. Use 'eval $VARIABLE' instead.")
             return False
-
-    def title(self, title):
-        sys.stdout.write("\x1b]2;" + title + "\x07")
