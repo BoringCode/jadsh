@@ -20,6 +20,8 @@ class Shell():
 
     def loop(self):
         while self.status == SHELL_STATUS_RUN:
+            self.title("jadsh " + os.getcwd())
+
             # Draw the prompt
             self.prompt.draw()
 
@@ -102,3 +104,6 @@ class Shell():
         if "&&" in user_input:
             print(self.hilite("Unsupported use of &&.") + " In jadsh, please use 'COMMAND; and COMMAND'")
             return False
+
+    def title(self, title):
+        sys.stdout.write("\x1b]2;" + title + "\x07")
