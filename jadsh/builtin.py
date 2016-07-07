@@ -12,10 +12,10 @@ class Builtin:
 	def execute(self, *args):
 		pass
 
-	def print_help(self):
+	def help(self):
 		help_text = self.__doc__
 		if help_text is None:
 			self.shell.message("Help error", "This program (" + self.__class__.__name__ + ") doesn't not have a help text")
 		else:
-			sys.stdout.write(help_text.strip().replace("\t", ""))
+			sys.stdout.write(help_text.strip())
 			sys.stdout.write("\n")

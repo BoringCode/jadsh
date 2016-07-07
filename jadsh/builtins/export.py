@@ -13,7 +13,7 @@ class export(Builtin):
 
 	def execute(self, *args):
 		if "--help" in args:
-			self.print_help()
+			self.help()
 		elif len(args) != 1:
 			self.show_environment()
 		else:

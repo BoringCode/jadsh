@@ -98,7 +98,7 @@ class calc(Builtin):
 
     def execute(self, *args):
         if "--help" in args:
-            self.print_help()
+            self.help()
         else:
             try:
                 expression = ' '.join(args)

@@ -70,9 +70,12 @@ class Shell():
         # Fork to child process
         pid = os.fork()
 
+        # 0 means that I am the child, so I should replace myself with the new program
         if pid == 0:
             os.execvp(command, tokens)
+        # I am the parent
         elif pid > 0:
+            # Wait for the child to complete before continuing
             while True:
                 wpid, status = os.waitpid(pid, 0)
 
