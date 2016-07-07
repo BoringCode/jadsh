@@ -16,7 +16,8 @@ class Shell():
         self.prompt = prompt
         self.builtins = {}
         self.history = []
-        
+        self.environment = {}
+
         self.loop()
 
     def loop(self):
@@ -37,14 +38,14 @@ class Shell():
 
             if not user_input:
                 user_input = "exit"
-
-            # Help the user
-            if self.syntax_check(user_input) == False:
-                continue
            
             # Allow commands to be split (so user can enter multiple commands at once)
             commands = re.split('[;]+', user_input)
             for cmd in commands:
+                # Help the user
+                if self.syntax_check(cmd) == False:
+                    continue
+
                 # Get tokens from user input
                 tokens = self.tokenize(cmd)
 
@@ -52,7 +53,7 @@ class Shell():
                 try:
                     self.status = self.execute(tokens)
                 except OSError as e:
-                    print(self.hilite("jadsh error: ") + str(e))
+                    self.message("jadsh error", str(e))
                     return
                 except KeyboardInterrupt:
                     continue
@@ -95,7 +96,13 @@ class Shell():
             return False
     
     def tokenize(self, command):
-        return shlex.split(command)
+        tokens = shlex.split(command)
+        return tokens
+
+    def message(self, title, message, status = False):
+        sys.stdout.write(self.hilite(title, status) + ": ")
+        sys.stdout.write(message)
+        sys.stdout.write("\n")
 
     def hilite(self, string, status = False, bold = False):
         attr = []
@@ -111,7 +118,10 @@ class Shell():
 
     def syntax_check(self, user_input):
         if "&&" in user_input:
-            print(self.hilite("Unsupported use of &&.") + " In jadsh, please use 'COMMAND; and COMMAND'")
+            self.message("jadsh error", "Unsupported use of &&. In jadsh, please use 'COMMAND; and COMMAND'")
+            return False
+        if user_input[0] == "$":
+            self.message("jadsh error", "Unsupported use of $VARIABLE. In jadsh, variables cannot be used directly. Use 'eval $VARIABLE' instead.")
             return False
 
     def title(self, title):
