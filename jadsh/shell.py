@@ -10,7 +10,7 @@ from jadsh.constants import *
 
 class Shell():
  
-    def __init__(self, prompt = Prompt(">"), status = SHELL_STATUS_RUN):
+    def __init__(self, prompt = Prompt(), status = SHELL_STATUS_RUN):
         self.status = status
         self.prompt = prompt
         self.builtins = {}

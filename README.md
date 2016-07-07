@@ -7,7 +7,6 @@ Experiments with making a really dumb, slow shell in Python. This will never be 
 ## Requirements
 
 - Python 3.5+
-- virtualenv
 
 ## Setup
 
@@ -15,7 +14,6 @@ Initialize virtualenv and install requirements.
 
 ```bash
 virtualenv venv
-pip install -r requirements.txt
 ```
 
 Launch the shell.
