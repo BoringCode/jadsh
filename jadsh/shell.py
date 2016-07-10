@@ -15,7 +15,34 @@ class _Getch:
             self.impl = _GetchWindows()
         except ImportError:
             self.impl = _GetchUnix()
-    def __call__(self): return self.impl()
+    def __call__(self): 
+        char_list = []
+        # Special characters that are in the escape sequence that I'm looking for
+        arrow_key_chars = [chr(27), chr(91)]
+        # Some keys are longer than 1 character, so I have to loop
+        for i in range(3):
+            try:
+                char_list.append(self.impl())
+            except:
+                pass
+            # Ignore this key
+            if char_list[i] not in arrow_key_chars:
+                break
+            # Special case to handle escape key
+            if len(char_list) > 1 and char_list == [chr(27), chr(27)]:
+                return chr(27)
+        if len(char_list) == 3:
+            if char_list[2] == 'A':
+                return 'u-arrow'
+            if char_list[2] == 'B':
+                return "d-arrow"
+            if char_list[2] == "C":
+                return "r-arrow"
+            if char_list[2] == "D":
+                return "l-arrow"
+        if len(char_list) == 1:
+            return char_list[0]
+        return ''
 
 class _GetchUnix:
     def __init__(self):
@@ -54,26 +81,36 @@ class Shell():
 
     def loop(self):
         current_command = ""
-        current_index = 0
+        current_char = ""
+        cursor_position = 0
         execute = False
         redraw = True
         while self.status == constants.SHELL_STATUS_RUN:
+            # Reset cursor position if current command is empty
+            if len(current_command) == 0 or cursor_position < 0: cursor_position = 0
+            if cursor_position > len(current_command): cursor_position = len(current_command)
+
             # Only redraw if necessary
             if redraw:
                 # Clear the current line and redraw
                 sys.stdout.write("\x1b[2K\r")
 
+                sys.stdout.write(str(cursor_position) + " ")
+                sys.stdout.write(str(len(current_command)) + " ")
+                if len(current_char) == 1: sys.stdout.write(str(ord(current_char)) + " ")
+
                 # Draw the prompt
                 self.prompt.draw()
 
                 # Output what the user has entered so far
-                sys.stdout.write(current_command[:current_index])
+                sys.stdout.write(current_command[:cursor_position])
+                sys.stdout.write(current_command[cursor_position:])
                 sys.stdout.flush()
-                sys.stdout.write(current_command[current_index:])
             # Only write current character if user is just typing text
             else:
                 sys.stdout.write(current_char)
                 sys.stdout.flush()
+                sys.stdout.write(current_command[cursor_position:])
                 redraw = True
 
             # Grab user input
@@ -86,17 +123,30 @@ class Shell():
                 current_command = "exit"
                 execute = True
 
+            # Error checking
+            if len(current_char) == 0:
+                continue
+
+            # Handle special keys
+            if len(current_char) > 1:
+                if current_char == "l-arrow":
+                    cursor_position -= 1
+                if current_char == "r-arrow":
+                    cursor_position += 1
+                continue
+
             char_code = ord(current_char)
 
             # Valid character, add to current command
             if char_code >= 32 and char_code <= 126:
-                current_command += current_char
-                current_index += 1
-                redraw = False
+                cursor_position += 1
+                current_command = current_command[:cursor_position] + current_char + current_command[cursor_position:]
+                #redraw = False
 
+            # Backspace
             if char_code == 127:
                 current_command = current_command[:-1]
-                current_index -= 1
+                if cursor_position > 0: cursor_position -= 1
 
             # end of text
             if char_code == 3:
