@@ -5,69 +5,11 @@ import os
 import importlib
 import re
 import shlex
+from jadsh.getch import Getch
 from jadsh.prompt import Prompt
 import jadsh.constants as constants
 
-class _Getch:
-    """Gets a single character from standard input"""
-    def __init__(self):
-        try:
-            self.impl = _GetchWindows()
-        except ImportError:
-            self.impl = _GetchUnix()
-    def __call__(self): 
-        char_list = []
-        # Special characters that are in the escape sequence that I'm looking for
-        arrow_key_chars = [chr(27), chr(91)]
-        # Some keys are longer than 1 character, so I have to loop
-        for i in range(3):
-            try:
-                char_list.append(self.impl())
-            except:
-                pass
-            # Ignore this key
-            if char_list[i] not in arrow_key_chars:
-                break
-            # Special case to handle escape key
-            if len(char_list) > 1 and char_list == [chr(27), chr(27)]:
-                return chr(27)
-        if len(char_list) == 3:
-            if char_list[2] == 'A':
-                return 'u-arrow'
-            if char_list[2] == 'B':
-                return "d-arrow"
-            if char_list[2] == "C":
-                return "r-arrow"
-            if char_list[2] == "D":
-                return "l-arrow"
-        if len(char_list) == 1:
-            return char_list[0]
-        return ''
-
-class _GetchUnix:
-    def __init__(self):
-        import tty, sys
-
-    def __call__(self):
-        import sys, tty, termios
-        fd = sys.stdin.fileno()
-        old_settings = termios.tcgetattr(fd)
-        try:
-            tty.setraw(sys.stdin.fileno())
-            ch = sys.stdin.read(1)
-        finally:
-            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-        return ch
-
-class _GetchWindows:
-    def __init__(self):
-        import msvcrt
-    def __call__(self):
-        import msvcrt
-        return msvcrt.getch()
-
-class Shell():
- 
+class Shell(): 
     def __init__(self, prompt = Prompt(), status = constants.SHELL_STATUS_RUN):
         self.status = status
         self.prompt = prompt
@@ -75,13 +17,14 @@ class Shell():
         self.history = []
         self.environment = {}
 
-        self.getch = _Getch()
+        self.getch = Getch()
 
         self.loop()
 
     def loop(self):
         current_command = ""
         current_char = ""
+        char_code = -1
         cursor_position = 0
         execute = False
         redraw = True
@@ -114,53 +57,44 @@ class Shell():
                 redraw = True
 
             # Grab user input
-            try:
-                current_char = self.getch()
-            except KeyboardInterrupt:
-                sys.stdout.write("\n")
+            char_code = self.getch()
+
+            # Escape sequence, handle appropriately
+            if char_code >= constants.ARROW_UP:
+                print("Esc sequence")
                 continue
-            except IOError:
-                current_command = "exit"
-                execute = True
+
+            current_char = chr(char_code)
 
             # Error checking
             if len(current_char) == 0:
                 continue
 
-            # Handle special keys
-            if len(current_char) > 1:
-                if current_char == "l-arrow":
-                    cursor_position -= 1
-                if current_char == "r-arrow":
-                    cursor_position += 1
+            # Backspace
+            if char_code == constants.BACKSPACE:
+                current_command = current_command[:-1]
+                if cursor_position > 0: cursor_position -= 1
+            # End of line
+            elif char_code == constants.CTRL_C:
+                current_command = ""
+                sys.stdout.write("\r")
+            # End of input
+            elif char_code == constants.CTRL_D:
+                current_command = "exit"
+                execute = True
+            # Enter, input command
+            elif char_code == constants.ENTER:
+                execute = True
+                sys.stdout.write("\n")
+            # Ignore these keys
+            elif char_code == constants.ESC:
                 continue
-
-            char_code = ord(current_char)
-
-            # Valid character, add to current command
-            if char_code >= 32 and char_code <= 126:
+            # Regular input
+            else:
                 cursor_position += 1
                 current_command = current_command[:cursor_position] + current_char + current_command[cursor_position:]
                 #redraw = False
 
-            # Backspace
-            if char_code == 127:
-                current_command = current_command[:-1]
-                if cursor_position > 0: cursor_position -= 1
-
-            # end of text
-            if char_code == 3:
-                current_command = ""
-                sys.stdout.write("\r")
-            # end of transmission (quit)
-            if char_code == 4:
-                current_command = "exit"
-                execute = True
-
-            # Check if user has entered the command yet
-            if char_code == 13:
-                execute = True
-                sys.stdout.write("\n")
             
             # Execute flag has been set, send the current user input to be parsed
             if execute:
