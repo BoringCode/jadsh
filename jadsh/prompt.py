@@ -1,5 +1,4 @@
-import sys
-import os
+import sys, os, socket, getpass
 import jadsh.constants as constants
 
 class Prompt():
@@ -9,7 +8,7 @@ class Prompt():
 
     def generate(self):
         pwd = self.getcwd()
-        return self.title("jadsh " + os.getcwd()) + pwd + ":" + self.promptChar + ' '
+        return self.title("jadsh " + os.getcwd()) + getpass.getuser() + "@" + socket.gethostname() + ":" + pwd + ":" + self.promptChar + ' '
 
     def getcwd(self):
     	pwd = os.getcwd()
