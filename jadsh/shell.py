@@ -17,51 +17,77 @@ class Shell():
         self.history = []
         self.environment = {}
 
+        self.ab = ""
+
         self.getch = Getch()
 
         self.loop()
 
+    def getCursorPosition(self):
+        # Report location
+        sys.stdout.write("\x1b[6n")
+
+        buf = []
+        for i in range(32):
+            buf.append(self.getch.read(True))
+            print(buf)
+            if buf[i] is None: break
+            if buf[i] == 'R': break
+        buf[i] = '\0'
+
+        if buf[0] != constants.ESC or buf[1] != '[': return False
+        print(buf)
+        return True
+
+
+    def abAppend(self, string):
+        self.ab += string
+
+    def drawScreen(self):
+        self.abAppend("\x1b[?25l"); # Hide cursor.
+
+        # Go to beginning of line
+        self.abAppend("\x1b[2K\r")
+
+        prompt = self.prompt.generate()
+        self.abAppend(prompt)
+
+        self.abAppend(self.current_command)
+
+        # Place cursor at correct position
+        #cursor = '\x1b[%d;%dH' % ()
+
+
+        self.abAppend("\x1b[?25h") # Show cursor
+
+        sys.stdout.write(self.ab)
+        sys.stdout.flush()
+        self.ab = ""
+
+
     def loop(self):
-        current_command = ""
+        self.current_command = ""
+        self.cursor_position = 0
         current_char = ""
         char_code = -1
-        cursor_position = 0
         execute = False
         redraw = True
         while self.status == constants.SHELL_STATUS_RUN:
             # Reset cursor position if current command is empty
-            if len(current_command) == 0 or cursor_position < 0: cursor_position = 0
-            if cursor_position > len(current_command): cursor_position = len(current_command)
+            if len(self.current_command) == 0 or self.cursor_position < 0: self.cursor_position = 0
+            if self.cursor_position > len(self.current_command): self.cursor_position = len(self.current_command)
 
-            # Only redraw if necessary
-            if redraw:
-                # Clear the current line and redraw
-                sys.stdout.write("\x1b[2K\r")
-
-                sys.stdout.write(str(cursor_position) + " ")
-                sys.stdout.write(str(len(current_command)) + " ")
-                if len(current_char) == 1: sys.stdout.write(str(ord(current_char)) + " ")
-
-                # Draw the prompt
-                self.prompt.draw()
-
-                # Output what the user has entered so far
-                sys.stdout.write(current_command[:cursor_position])
-                sys.stdout.write(current_command[cursor_position:])
-                sys.stdout.flush()
-            # Only write current character if user is just typing text
-            else:
-                sys.stdout.write(current_char)
-                sys.stdout.flush()
-                sys.stdout.write(current_command[cursor_position:])
-                redraw = True
+            # Draw the screen
+            self.drawScreen()
 
             # Grab user input
             char_code = self.getch()
 
             # Escape sequence, handle appropriately
             if char_code >= constants.ARROW_UP:
-                print("Esc sequence")
+                if char_code == constants.ARROW_LEFT:
+                    if cursor_position > 0:
+                        sys.stdout.write("\x1b[")
                 continue
 
             current_char = chr(char_code)
@@ -72,15 +98,15 @@ class Shell():
 
             # Backspace
             if char_code == constants.BACKSPACE:
-                current_command = current_command[:-1]
-                if cursor_position > 0: cursor_position -= 1
+                self.current_command = self.current_command[:-1]
+                if self.cursor_position > 0: self.cursor_position -= 1
             # End of line
             elif char_code == constants.CTRL_C:
-                current_command = ""
+                self.current_command = ""
                 sys.stdout.write("\r")
             # End of input
             elif char_code == constants.CTRL_D:
-                current_command = "exit"
+                self.current_command = "exit"
                 execute = True
             # Enter, input command
             elif char_code == constants.ENTER:
@@ -91,15 +117,14 @@ class Shell():
                 continue
             # Regular input
             else:
-                cursor_position += 1
-                current_command = current_command[:cursor_position] + current_char + current_command[cursor_position:]
-                #redraw = False
-
+                self.cursor_position += 1
+                self.current_command = self.current_command[:self.cursor_position] + current_char + self.current_command[self.cursor_position:]
+                redraw = False
             
             # Execute flag has been set, send the current user input to be parsed
             if execute:
-                self.parse(current_command)
-                current_command = ""
+                self.parse(self.current_command)
+                self.current_command = ""
                 execute = False
 
     def parse(self, string):

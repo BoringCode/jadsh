@@ -7,11 +7,9 @@ class Prompt():
     	self.home = os.path.expanduser("~")
     	self.promptChar = promptChar
 
-    def draw(self):
+    def generate(self):
         pwd = self.getcwd()
-        self.title("jadsh " + os.getcwd())
-        sys.stdout.write(pwd + ":" + self.promptChar + ' ')
-        sys.stdout.flush()
+        return self.title("jadsh " + os.getcwd()) + pwd + ":" + self.promptChar + ' '
 
     def getcwd(self):
     	pwd = os.getcwd()
@@ -19,7 +17,7 @@ class Prompt():
     	return pwd
 
     def title(self, title = "jadsh"): 
-    	sys.stdout.write("\x1b]2;" + title + "\x07")
+    	return "\x1b]2;" + title + "\x07"
 
     def hilite(self, string, status = False, bold = False):
     	attr = []

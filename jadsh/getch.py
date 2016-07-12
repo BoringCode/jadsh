@@ -8,10 +8,10 @@ class Getch():
     Returns the char code and handles special terminal input (escape sequences)
     """
     def __init__(self):
-        try:
-            self.read = _GetchWindows()
-        except ImportError:
-            self.read = _GetchUnix()
+        #try:
+        #    self.read = _GetchWindows()
+        #except ImportError:
+        self.read = _GetchUnix()
 
     def __call__(self):
         char = ord(self.read())     
@@ -66,14 +66,19 @@ class _GetchUnix():
     def __init__(self):
         import tty, sys
 
-    def __call__(self):
-        import sys, tty, termios
+    def __call__(self, returnImmediately = False):
+        import sys, tty, fcntl, os, termios
         fd = sys.stdin.fileno()
         old_settings = termios.tcgetattr(fd)
+        old_flags = fcntl.fcntl(fd, fcntl.F_GETFL)
         try:
+            if returnImmediately:
+                fcntl.fcntl(fd, fcntl.F_SETFL, old_flags | os.O_NONBLOCK)
             tty.setraw(fd)
-            ch = sys.stdin.read(1)
+            ch = sys.stdin.buffer.raw.read(1)
         finally:
+            if returnImmediately:
+                fcntl.fcntl(fd, fcntl.F_SETFL, old_flags)
             termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
         return ch
 
