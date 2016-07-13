@@ -75,7 +75,10 @@ class _GetchUnix():
             if returnImmediately:
                 fcntl.fcntl(fd, fcntl.F_SETFL, old_flags | os.O_NONBLOCK)
             tty.setraw(fd)
-            ch = sys.stdin.buffer.raw.read(1)
+            if returnImmediately:
+                ch = sys.stdin.buffer.raw.read(1)
+            else:
+                ch = sys.stdin.read(1)
         finally:
             if returnImmediately:
                 fcntl.fcntl(fd, fcntl.F_SETFL, old_flags)
