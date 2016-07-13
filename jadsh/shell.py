@@ -28,11 +28,18 @@ class Shell():
         # The screen object
         self.screenObject = ""
 
-        # GrscreenObject individual characters from standard input
+        # Grab individual characters from standard input
         self.getch = Getch()
+
+        # Output welcome message
+        self.welcome()
 
         # Start the main program loop
         self.loop()
+
+    def welcome(self):
+        sys.stdout.write("Welcome to jadsh, Just A Dumb SHell\n")
+        sys.stdout.write("Type " + self.hilite("help", True) + " for instructions on how to use jadsh\n")
 
     def screenAppend(self, string):
         """
@@ -68,6 +75,7 @@ class Shell():
         self.screenAppend("\x1b[?25h") # Show cursor
 
         # Calculate cursor position and place at correct spot
+        # TODO: Handle edge case when user input goes to more than 1 line
         position = len(self.user_input) - self.cursor_position
         if position > 0:
             # Move cursor backwards
@@ -116,7 +124,8 @@ class Shell():
         current_char = ""
         execute = False
 
-        # GrscreenObject user input
+        # Grab user input (1 character at a time)
+        # This method returns the ASCII code of the character, not the actual character
         char_code = self.getch()
 
         # Escape sequence, handle appropriately
@@ -127,9 +136,29 @@ class Shell():
             elif char_code == constants.ARROW_RIGHT:
                 if self.cursor_position < len(self.user_input):
                     self.cursor_position += 1
+            # Move by words, rather than characters
+            elif char_code == constants.CTRL_ARROW_LEFT:
+                if self.cursor_position > 0:
+                    # Grab the string before the current cursor
+                    past_string = self.user_input[:self.cursor_position]
+                    # Get a list of all the words in the string
+                    words = past_string.split()
+                    # Decrement the cursor by the length of the past string minus the last occurrence of the last word
+                    # This handles unknown spaces that were stripped out by the split
+                    self.cursor_position -= len(past_string) - past_string.rfind(words[-1])
+            elif char_code == constants.CTRL_ARROW_RIGHT:
+                if self.cursor_position < len(self.user_input):
+                    # Grab the string after the current cursor
+                    forward_string = self.user_input[self.cursor_position:]
+                    # Get a list of all the words
+                    words = forward_string.split()
+                    # Increment the cursor position by the index of the found word plus its length
+                    # Have to do this because of spaces (I don't know if there is a space in front of the word)
+                    self.cursor_position += forward_string.find(words[0]) + len(words[0])
             # Delete key
             elif char_code == constants.DEL_KEY:
                 if len(self.user_input) > 0:
+                    # Reforms user input string based upon cursor position
                     self.user_input = self.user_input[:self.cursor_position] + self.user_input[self.cursor_position + 1:]
             # Move cursor to end of line
             elif char_code == constants.END_KEY:
@@ -139,6 +168,7 @@ class Shell():
                 self.cursor_position = 0
             return False
 
+        # Convert ASCII code to actual character
         current_char = chr(char_code)
 
         # Error checking
@@ -152,20 +182,24 @@ class Shell():
                 if self.cursor_position > 0: self.cursor_position -= 1
         # End of line
         elif char_code == constants.CTRL_C:
+            self.cursor_position = 0
             self.user_input = ""
         # End of input
         elif char_code == constants.CTRL_D:
             self.user_input = "exit"
             execute = True
-        # Enter, input command
+        # Enter, execute the user input as a command
         elif char_code == constants.ENTER:
             execute = True
             sys.stdout.write("\n")
             self.saveCursor()
+        elif char_code == constants.TAB:
+            # Ignore tabs for now, eventually we will do tab completion
+            return False
         # Ignore these keys
         elif char_code == constants.ESC:
             return False
-        # Regular input
+        # Regular input, add it to the user input at the cursor position
         else:
             self.user_input = self.user_input[:self.cursor_position] + current_char + self.user_input[self.cursor_position:]
             self.cursor_position += 1

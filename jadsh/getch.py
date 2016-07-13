@@ -14,7 +14,7 @@ class Getch():
         self.read = _GetchUnix()
 
     def __call__(self):
-        char = ord(self.read())     
+        char = ord(self.read())
         while True:
             if char == constants.ESC:
                 # Grab a sequence of 2 characters
@@ -36,6 +36,21 @@ class Getch():
                                 return constants.PAGE_UP
                             elif seq[1] == '6': 
                                 return constants.PAGE_DOWN
+                        elif seq[2] == ';':
+                            try:
+                                seq.append(self.read())
+                                seq.append(self.read())
+                            except:
+                                return constants.ESC
+                            if seq[3] == '5':
+                                if seq[4] == 'A':
+                                    return constants.CTRL_ARROW_UP
+                                elif seq[4] == 'B':
+                                    return constants.CTRL_ARROW_DOWN
+                                elif seq[4] == 'C':
+                                    return constants.CTRL_ARROW_RIGHT
+                                elif seq[4] == 'D':
+                                    return constants.CTRL_ARROW_LEFT
                     else:
                         if seq[1] == 'A': 
                             return constants.ARROW_UP
