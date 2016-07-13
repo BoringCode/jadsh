@@ -26,52 +26,57 @@ class Shell():
         self.environment = {}
 
         # The screen object
-        self.ab = ""
+        self.screenObject = ""
 
-        # Grab individual characters from standard input
+        # GrscreenObject individual characters from standard input
         self.getch = Getch()
 
         # Start the main program loop
         self.loop()
 
-    def abAppend(self, string):
+    def screenAppend(self, string):
         """
         Append new strings to the screen object
         """
-        self.ab += str(string)
+        self.screenObject += str(string)
 
     def drawScreen(self):
         """
         Draw the terminal so the user can see it
         """
-        self.abAppend("\x1b[?25l"); # Hide cursor.
+        # Reset cursor to previous position
+        self.screenAppend("\x1b8")
 
-        # Go to beginning of line
-        self.abAppend("\x1b[2K\r")
+        self.screenAppend("\x1b[?25l");
+
+        # Clear everything after the current line
+        self.screenAppend("\x1b[J\r")
+        # Save the current cursor position
+        self.screenAppend("\x1b7")
 
         # Set the terminal title
         title = self.prompt.title("jadsh " + os.getcwd())
-        self.abAppend(title)
+        self.screenAppend(title)
 
         # Generate the prompt
         prompt = self.prompt.generate()
-        self.abAppend(prompt)
+        self.screenAppend(prompt)
 
-        # Display the current command (what the user is typing)
-        self.abAppend(self.current_command)
+        # Display the current input (what the user is typing)
+        self.screenAppend(self.user_input)
 
-        self.abAppend("\x1b[?25h") # Show cursor
+        self.screenAppend("\x1b[?25h") # Show cursor
 
         # Calculate cursor position and place at correct spot
-        position = len(self.current_command) - self.cursor_position
+        position = len(self.user_input) - self.cursor_position
         if position > 0:
             # Move cursor backwards
-            self.abAppend("\x1b[" + str(position) + "D")
+            self.screenAppend("\x1b[" + str(position) + "D")            
 
         # Output everything to the screen
-        sys.stdout.write(self.ab)
+        sys.stdout.write(self.screenObject)
         sys.stdout.flush()
-        self.ab = ""
+        self.screenObject = ""
 
 
     def loop(self):
@@ -80,12 +85,13 @@ class Shell():
 
         Draws terminal screen, gets keyboard input, and executes programs as necessary
         """
-        self.current_command = ""
+        self.user_input = ""
         self.cursor_position = 0
+        self.saveCursor()
         while self.status == constants.SHELL_STATUS_RUN:
             # Reset cursor position if current command is empty
-            if len(self.current_command) == 0 or self.cursor_position < 0: self.cursor_position = 0
-            if self.cursor_position > len(self.current_command): self.cursor_position = len(self.current_command)
+            if len(self.user_input) == 0 or self.cursor_position < 0: self.cursor_position = 0
+            if self.cursor_position > len(self.user_input): self.cursor_position = len(self.user_input)
 
             # Draw the screen
             self.drawScreen()
@@ -95,13 +101,14 @@ class Shell():
             
             # Execute flag has been set, send the current user input to be parsed
             if execute:
-                self.parse(self.current_command)
+                self.parse(self.user_input)
                 self.cursor_position = 0
-                self.current_command = ""
+                self.user_input = ""
+                self.saveCursor()
 
     def keyboardInput(self):
         """
-        Grab keyboard input from the terminal and evaluate it as necessary
+        GrscreenObject keyboard input from the terminal and evaluate it as necessary
 
         @return Boolean
         """
@@ -109,7 +116,7 @@ class Shell():
         current_char = ""
         execute = False
 
-        # Grab user input
+        # GrscreenObject user input
         char_code = self.getch()
 
         # Escape sequence, handle appropriately
@@ -118,14 +125,15 @@ class Shell():
                 if self.cursor_position > 0:
                     self.cursor_position -= 1
             elif char_code == constants.ARROW_RIGHT:
-                if self.cursor_position < len(self.current_command):
+                if self.cursor_position < len(self.user_input):
                     self.cursor_position += 1
             # Delete key
             elif char_code == constants.DEL_KEY:
-                self.current_command = self.current_command[:self.cursor_position] + self.current_command[self.cursor_position + 1:]
+                if len(self.user_input) > 0:
+                    self.user_input = self.user_input[:self.cursor_position] + self.user_input[self.cursor_position + 1:]
             # Move cursor to end of line
             elif char_code == constants.END_KEY:
-                self.cursor_position = len(self.current_command)
+                self.cursor_position = len(self.user_input)
             # Move cursor to beginning of line
             elif char_code == constants.HOME_KEY:
                 self.cursor_position = 0
@@ -139,26 +147,27 @@ class Shell():
 
         # Backspace
         if char_code == constants.BACKSPACE:
-            self.current_command = self.current_command[:self.cursor_position - 1] + self.current_command[self.cursor_position:]
-            if self.cursor_position > 0: self.cursor_position -= 1
+            if len(self.user_input) > 0:
+                self.user_input = self.user_input[:self.cursor_position - 1] + self.user_input[self.cursor_position:]
+                if self.cursor_position > 0: self.cursor_position -= 1
         # End of line
         elif char_code == constants.CTRL_C:
-            self.current_command = ""
-            sys.stdout.write("\r")
+            self.user_input = ""
         # End of input
         elif char_code == constants.CTRL_D:
-            self.current_command = "exit"
+            self.user_input = "exit"
             execute = True
         # Enter, input command
         elif char_code == constants.ENTER:
             execute = True
             sys.stdout.write("\n")
+            self.saveCursor()
         # Ignore these keys
         elif char_code == constants.ESC:
             return False
         # Regular input
         else:
-            self.current_command = self.current_command[:self.cursor_position] + current_char + self.current_command[self.cursor_position:]
+            self.user_input = self.user_input[:self.cursor_position] + current_char + self.user_input[self.cursor_position:]
             self.cursor_position += 1
 
         return execute
@@ -175,7 +184,11 @@ class Shell():
                 continue
 
             # Get tokens from user input
-            tokens = self.tokenize(cmd)
+            try:
+                tokens = self.tokenize(cmd)
+            except:
+                self.message("jadsh error", "Malformed command")
+                return
 
             # Execute command
             try:
@@ -257,6 +270,13 @@ class Shell():
         sys.stdout.write(self.hilite(title + ": ", status))
         sys.stdout.write(message)
         sys.stdout.write("\n")
+        self.saveCursor()
+
+    def saveCursor(self):
+        sys.stdout.write("\x1b7")
+
+    def resetCursor(self):
+        sys.stdout.write("\x1b8")
 
     def hilite(self, string, status = False, bold = False):
         """
@@ -288,6 +308,6 @@ class Shell():
             self.message("jadsh error", "Unsupported use of &&. In jadsh, please use 'COMMAND; and COMMAND'")
             return False
         if user_input[0] == "$":
-            self.message("jadsh error", "Unsupported use of $VARIABLE. In jadsh, variables cannot be used directly. Use 'eval $VARIABLE' instead.")
+            self.message("jadsh error", "Unsupported use of $VARIscreenObjectLE. In jadsh, variscreenObjectles cannot be used directly. Use 'eval $VARIscreenObjectLE' instead.")
             return False
         return True
