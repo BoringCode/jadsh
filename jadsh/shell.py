@@ -54,10 +54,12 @@ class Shell():
         # Reset cursor to previous position
         self.screenAppend("\x1b8")
 
+        # Hide the cursor
         self.screenAppend("\x1b[?25l");
 
         # Clear everything after the current line
         self.screenAppend("\x1b[J\r")
+
         # Save the current cursor position
         self.screenAppend("\x1b7")
 
@@ -85,7 +87,6 @@ class Shell():
         sys.stdout.write(self.screenObject)
         sys.stdout.flush()
         self.screenObject = ""
-
 
     def loop(self):
         """
@@ -342,6 +343,6 @@ class Shell():
             self.message("jadsh error", "Unsupported use of &&. In jadsh, please use 'COMMAND; and COMMAND'")
             return False
         if user_input[0] == "$":
-            self.message("jadsh error", "Unsupported use of $VARIscreenObjectLE. In jadsh, variscreenObjectles cannot be used directly. Use 'eval $VARIscreenObjectLE' instead.")
+            self.message("jadsh error", "Unsupported use of $VARIABLE. In jadsh, variables cannot be used directly. Use 'eval $VARIABLE' instead.")
             return False
         return True
