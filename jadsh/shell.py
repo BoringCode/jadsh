@@ -1,5 +1,3 @@
-# jadsh
-
 import sys
 import os
 import importlib
@@ -56,6 +54,7 @@ class Shell():
         Draw the terminal so the user can see it
         """
         # Reset cursor to previous position
+        # TODO: Handle edge case when current line is at the bottom of the terminal
         self.screenAppend("\x1b8")
 
         # Hide the cursor
