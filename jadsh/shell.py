@@ -25,6 +25,7 @@ class Shell():
 
         self.builtins = {}
         self.history = []
+        self.history_position = 0
 
         # The screen object
         self.screenObject = ""
@@ -166,6 +167,20 @@ class Shell():
                     # Increment the cursor position by the index of the found word plus its length
                     # Have to do this because of spaces (I don't know if there is a space in front of the word)
                     self.cursor_position += forward_string.find(words[0]) + len(words[0])
+            elif char_code == constants.ARROW_UP:
+                if self.history_position < len(self.history):
+                    self.history_position += 1
+                    self.user_input = self.history[-self.history_position]["input"]
+                    self.cursor_position = len(self.user_input)
+            elif char_code == constants.ARROW_DOWN:
+                if self.history_position > 1:
+                    self.history_position -= 1
+                    self.user_input = self.history[-self.history_position]["input"]
+                    self.cursor_position = len(self.user_input)
+                else:
+                    self.history_position = 0
+                    self.user_input = ""
+                    self.cursor_position = 0
             # Delete key
             elif char_code == constants.DEL_KEY:
                 if len(self.user_input) > 0:
@@ -281,7 +296,7 @@ class Shell():
         # Block program execution until process is finished
         process.wait()
         
-        self.history.append({ "command": command, "args": args })
+        self.history.append({ "command": command, "args": args, "input": self.user_input })
 
         # Assume all went well, continue
         return constants.SHELL_STATUS_RUN
