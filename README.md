@@ -4,20 +4,14 @@
 
 Experiments with making a really dumb, slow shell in Python. This will never be usable. Heck you probably shouldn't even look at it. But, I'm making it.
 
+Zero dependencies. Built entirely using Python stdlib and escape sequences.
+
 ## Requirements
 
 - Python 3.5+
 - Unix terminal with ANSI escape code support
-- virtualenv
 
 ## Setup
-
-Initialize virtualenv and install requirements.
-
-```bash
-virtualenv venv
-pip install -r requirements.txt
-```
 
 Launch the shell.
 
