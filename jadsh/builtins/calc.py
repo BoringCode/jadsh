@@ -102,7 +102,7 @@ class calc(Builtin):
         else:
             try:
                 expression = ' '.join(args)
-                print(self.parser.eval(expression))
+                self.shell.ofd.write(str(self.parser.eval(expression)))
             except:
-                print(self.shell.hilite("calc error:") + " Can't parse expression")
+                self.shell.message("calc error", " Can't parse expression")
         return constants.SHELL_STATUS_RUN

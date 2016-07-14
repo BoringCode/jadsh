@@ -7,11 +7,8 @@ class Getch():
 
     Returns the char code and handles special terminal input (escape sequences)
     """
-    def __init__(self):
-        #try:
-        #    self.read = _GetchWindows()
-        #except ImportError:
-        self.read = _GetchUnix()
+    def __init__(self, ifd):
+        self.read = _GetchUnix(ifd)
 
     def __call__(self):
         char = ord(self.read())
@@ -38,6 +35,7 @@ class Getch():
                                 return constants.PAGE_DOWN
                         elif seq[2] == ';':
                             try:
+                                # Have to grab two more characters from the input
                                 seq.append(self.read())
                                 seq.append(self.read())
                             except:
@@ -78,7 +76,8 @@ class Getch():
         
 
 class _GetchUnix():
-    def __init__(self):
+    def __init__(self, ifd):
+        self.ifd = ifd
         import tty, sys
 
     def __call__(self, returnImmediately = False):
@@ -91,18 +90,11 @@ class _GetchUnix():
                 fcntl.fcntl(fd, fcntl.F_SETFL, old_flags | os.O_NONBLOCK)
             tty.setraw(fd)
             if returnImmediately:
-                ch = sys.stdin.buffer.raw.read(1)
+                ch = self.ifd.buffer.raw.read(1)
             else:
-                ch = sys.stdin.read(1)
+                ch = self.ifd.read(1)
         finally:
             if returnImmediately:
                 fcntl.fcntl(fd, fcntl.F_SETFL, old_flags)
             termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
         return ch
-
-class _GetchWindows():
-    def __init__(self):
-        import msvcrt
-    def __call__(self):
-        import msvcrt
-        return msvcrt.getch()

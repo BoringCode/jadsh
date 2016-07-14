@@ -13,7 +13,7 @@ class Shell():
     """
     jadsh, Just A Dumb SHell
     """
-    def __init__(self, prompt = Prompt(), status = constants.SHELL_STATUS_RUN):
+    def __init__(self, prompt = Prompt(), ifd = sys.stdin, ofd = sys.stdout, status = constants.SHELL_STATUS_RUN):
         """
         Expects a new Prompt object and the status the shell should start with
 
@@ -21,6 +21,9 @@ class Shell():
         """
         self.status = status
         self.prompt = prompt
+        self.ifd = ifd
+        self.ofd = ofd
+
         self.builtins = {}
         self.history = []
         self.environment = {}
@@ -29,7 +32,7 @@ class Shell():
         self.screenObject = ""
 
         # Grab individual characters from standard input
-        self.getch = Getch()
+        self.getch = Getch(self.ifd)
 
         # Output welcome message
         self.welcome()
@@ -38,8 +41,8 @@ class Shell():
         self.loop()
 
     def welcome(self):
-        sys.stdout.write("Welcome to jadsh, Just A Dumb SHell\n")
-        sys.stdout.write("Type " + self.hilite("help", True) + " for instructions on how to use jadsh\n")
+        self.ofd.write("Welcome to jadsh, Just A Dumb SHell\n")
+        self.ofd.write("Type " + self.hilite("help", True) + " for instructions on how to use jadsh\n")
 
     def screenAppend(self, string):
         """
@@ -84,8 +87,8 @@ class Shell():
             self.screenAppend("\x1b[" + str(position) + "D")            
 
         # Output everything to the screen
-        sys.stdout.write(self.screenObject)
-        sys.stdout.flush()
+        self.ofd.write(self.screenObject)
+        self.ofd.flush()
         self.screenObject = ""
 
     def loop(self):
@@ -192,7 +195,7 @@ class Shell():
         # Enter, execute the user input as a command
         elif char_code == constants.ENTER:
             execute = True
-            sys.stdout.write("\n")
+            self.ofd.write("\n")
             self.saveCursor()
         elif char_code == constants.TAB:
             # Ignore tabs for now, eventually we will do tab completion
@@ -214,16 +217,16 @@ class Shell():
         # Allow commands to be split (so user can enter multiple commands at once)
         commands = re.split('[;]+', string)
         for cmd in commands:
-            # Help the user
-            if self.syntax_check(cmd) == False:
-                continue
-
             # Get tokens from user input
             try:
                 tokens = self.tokenize(cmd)
             except:
                 self.message("jadsh error", "Malformed command")
                 return
+
+            # Help the user
+            if self.syntax_check(tokens) == False:
+                continue
 
             # Execute command
             try:
@@ -302,16 +305,16 @@ class Shell():
         """
         Display message in the terminal
         """
-        sys.stdout.write(self.hilite(title + ": ", status))
-        sys.stdout.write(message)
-        sys.stdout.write("\n")
+        self.ofd.write(self.hilite(str(title) + ": ", status))
+        self.ofd.write(str(message))
+        self.ofd.write("\n")
         self.saveCursor()
 
     def saveCursor(self):
-        sys.stdout.write("\x1b7")
+        self.ofd.write("\x1b7")
 
     def resetCursor(self):
-        sys.stdout.write("\x1b8")
+        self.ofd.write("\x1b8")
 
     def hilite(self, string, status = False, bold = False):
         """
@@ -330,19 +333,21 @@ class Shell():
             attr.append('1')
         return '\x1b[%sm%s\x1b[0m' % (';'.join(attr), string)
 
-    def syntax_check(self, user_input):
+    def syntax_check(self, tokens):
         """
         Check the syntax of a command from the user
 
         This is purely a helper function for users who are used to Bash or another shell
 
+        TODO: Make this function smarter
+
         @return Boolean
         """
-        if not user_input: return True
-        if "&&" in user_input:
+        if not tokens: return True
+        if "&&" in tokens:
             self.message("jadsh error", "Unsupported use of &&. In jadsh, please use 'COMMAND; and COMMAND'")
             return False
-        if user_input[0] == "$":
+        if "$" in tokens:
             self.message("jadsh error", "Unsupported use of $VARIABLE. In jadsh, variables cannot be used directly. Use 'eval $VARIABLE' instead.")
             return False
         return True

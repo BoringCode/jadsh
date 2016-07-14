@@ -17,5 +17,5 @@ class Builtin:
 		if help_text is None:
 			self.shell.message("Help error", "This program (" + self.__class__.__name__ + ") doesn't not have a help text")
 		else:
-			sys.stdout.write(help_text.strip())
-			sys.stdout.write("\n")
+			self.shell.ofd.write(str(help_text.strip()))
+			self.shell.ofd.write("\n")
