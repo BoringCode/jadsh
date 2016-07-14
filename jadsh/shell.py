@@ -240,7 +240,7 @@ class Shell():
             try:
                 self.status = self.execute(tokens)
             except OSError as e:
-                self.message("jadsh error", str(e))
+                self.message(tokens[0], "command not found")
                 return
             except KeyboardInterrupt:
                 return
