@@ -18,5 +18,5 @@ class exit(Builtin):
 			self.help()
 			return constants.SHELL_STATUS_RUN
 		else:
-			self.shell.ofd.write("\n" + "Bye!" + "\n")
+			self.shell.stdout.write("\n" + "Bye!" + "\n")
 			return constants.SHELL_STATUS_STOP

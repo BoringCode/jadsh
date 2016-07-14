@@ -18,6 +18,7 @@ CTRL_D = 4         # Ctrl-d
 CTRL_F = 6         # Ctrl-f
 CTRL_H = 8         # Ctrl-h
 TAB = 9            # Tab
+NEWLINE = 10 	   # \n
 CTRL_L = 12        # Ctrl+l
 ENTER = 13         # Enter
 CTRL_Q = 17        # Ctrl-q

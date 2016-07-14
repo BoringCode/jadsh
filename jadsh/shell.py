@@ -5,6 +5,7 @@ import os
 import importlib
 import re
 import shlex
+import subprocess
 from jadsh.getch import Getch
 from jadsh.prompt import Prompt
 import jadsh.constants as constants
@@ -13,7 +14,7 @@ class Shell():
     """
     jadsh, Just A Dumb SHell
     """
-    def __init__(self, prompt = Prompt(), ifd = sys.stdin, ofd = sys.stdout, status = constants.SHELL_STATUS_RUN):
+    def __init__(self, prompt = Prompt(), stdin = sys.stdin, stdout = sys.stdout, status = constants.SHELL_STATUS_RUN):
         """
         Expects a new Prompt object and the status the shell should start with
 
@@ -21,8 +22,8 @@ class Shell():
         """
         self.status = status
         self.prompt = prompt
-        self.ifd = ifd
-        self.ofd = ofd
+        self.stdin = stdin
+        self.stdout = stdout
 
         self.builtins = {}
         self.history = []
@@ -32,7 +33,7 @@ class Shell():
         self.screenObject = ""
 
         # Grab individual characters from standard input
-        self.getch = Getch(self.ifd)
+        self.getch = Getch(self.stdin)
 
         # Output welcome message
         self.welcome()
@@ -41,8 +42,8 @@ class Shell():
         self.loop()
 
     def welcome(self):
-        self.ofd.write("Welcome to jadsh, Just A Dumb SHell\n")
-        self.ofd.write("Type " + self.hilite("help", True) + " for instructions on how to use jadsh\n")
+        self.stdout.write("Welcome to jadsh, Just A Dumb SHell\n")
+        self.stdout.write("Type " + self.hilite("help", True) + " for instructions on how to use jadsh\n")
 
     def screenAppend(self, string):
         """
@@ -87,8 +88,8 @@ class Shell():
             self.screenAppend("\x1b[" + str(position) + "D")            
 
         # Output everything to the screen
-        self.ofd.write(self.screenObject)
-        self.ofd.flush()
+        self.stdout.write(self.screenObject)
+        self.stdout.flush()
         self.screenObject = ""
 
     def loop(self):
@@ -131,6 +132,14 @@ class Shell():
         # Grab user input (1 character at a time)
         # This method returns the ASCII code of the character, not the actual character
         char_code = self.getch()
+
+        # Error checking
+        if char_code is False:
+            # Attempt to execute whatever is left
+            if self.user_input != "":
+                return True
+            self.status = constants.SHELL_STATUS_STOP
+            return False
 
         # Escape sequence, handle appropriately
         if char_code >= constants.ARROW_UP:
@@ -193,9 +202,9 @@ class Shell():
             self.user_input = "exit"
             execute = True
         # Enter, execute the user input as a command
-        elif char_code == constants.ENTER:
+        elif char_code == constants.ENTER or char_code == constants.NEWLINE:
             execute = True
-            self.ofd.write("\n")
+            self.stdout.write("\n")
             self.saveCursor()
         elif char_code == constants.TAB:
             # Ignore tabs for now, eventually we will do tab completion
@@ -251,21 +260,12 @@ class Shell():
         # Check if builtin command
         if self.builtin(command):
             return self.builtins[command].execute(*args)
-       
-        # Fork to child process
-        pid = os.fork()
+        
+        # Open command as a subprocess
+        process = subprocess.Popen(tokens, stdin = self.stdin, stdout = self.stdout)
 
-        # 0 means that I am the child, so I should replace myself with the new program
-        if pid == 0:
-            os.execvp(command, tokens)
-        # I am the parent
-        elif pid > 0:
-            # Wait for the child to complete before continuing
-            while True:
-                wpid, status = os.waitpid(pid, 0)
-
-                if os.WIFEXITED(status) or os.WIFSIGNALED(status):
-                    break
+        # Block program execution until process is finished
+        process.wait()
         
         self.history.append({ "command": command, "args": args })
 
@@ -305,16 +305,16 @@ class Shell():
         """
         Display message in the terminal
         """
-        self.ofd.write(self.hilite(str(title) + ": ", status))
-        self.ofd.write(str(message))
-        self.ofd.write("\n")
+        self.stdout.write(self.hilite(str(title) + ": ", status))
+        self.stdout.write(str(message))
+        self.stdout.write("\n")
         self.saveCursor()
 
     def saveCursor(self):
-        self.ofd.write("\x1b7")
+        self.stdout.write("\x1b7")
 
     def resetCursor(self):
-        self.ofd.write("\x1b8")
+        self.stdout.write("\x1b8")
 
     def hilite(self, string, status = False, bold = False):
         """

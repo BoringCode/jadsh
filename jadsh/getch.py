@@ -11,7 +11,14 @@ class Getch():
         self.read = _GetchUnix(ifd)
 
     def __call__(self):
-        char = ord(self.read())
+        read = self.read()
+
+        # Make sure we haven't reached the "end of file"
+        if not read:
+            return False
+
+        char = ord(read)
+        
         while True:
             if char == constants.ESC:
                 # Grab a sequence of 2 characters
