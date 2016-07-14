@@ -1,4 +1,4 @@
-import os
+import webbrowser
 from jadsh.builtin import Builtin
 import jadsh.constants as constants
 
@@ -19,13 +19,10 @@ class help(Builtin):
          Displays general help about jadsh
          
 	"""
-
-	def setup(self):
-		pass
-
 	def execute(self, path = "~", *args):
 		if "--help" in path or "--help" in args:
 			self.help()
 		else:
-			self.shell.message("jadsh help", "This will eventually display help", True)
+			self.shell.message("jadsh help", "Opening " + str(constants.HELP_URL) + "...", True)
+			webbrowser.open(constants.HELP_URL)
 		return constants.SHELL_STATUS_RUN

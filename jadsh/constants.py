@@ -2,6 +2,8 @@ VERSION = 0.2
 
 PYTHON_VERSION = "3.5"
 
+HELP_URL = "https://github.com/BoringCode/jadsh/wiki"
+
 SHELL_STATUS_RUN = 1
 SHELL_STATUS_STOP = 0
 
