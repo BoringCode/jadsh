@@ -1,5 +1,4 @@
 import os
-import sys
 from jadsh.builtin import Builtin
 import jadsh.constants as constants
 

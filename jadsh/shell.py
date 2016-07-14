@@ -12,7 +12,7 @@ import jadsh.constants as constants
 
 class Shell():
     """
-    jadsh, Just A Dumb SHell
+    jadsh, Just Another Dumb SHell
     """
     def __init__(self, prompt = Prompt(), stdin = sys.stdin, stdout = sys.stdout, status = constants.SHELL_STATUS_RUN):
         """
@@ -42,7 +42,7 @@ class Shell():
         self.loop()
 
     def welcome(self):
-        self.stdout.write("Welcome to jadsh, Just A Dumb SHell\n")
+        self.stdout.write("Welcome to jadsh, Just Another Dumb SHell\n")
         self.stdout.write("Type " + self.hilite("help", True) + " for instructions on how to use jadsh\n")
 
     def screenAppend(self, string):

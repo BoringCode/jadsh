@@ -1,4 +1,3 @@
-import sys
 import jadsh.constants as constants
 
 class Getch():
@@ -18,7 +17,7 @@ class Getch():
             return False
 
         char = ord(read)
-        
+
         while True:
             if char == constants.ESC:
                 # Grab a sequence of 2 characters
