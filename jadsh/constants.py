@@ -7,9 +7,6 @@ HELP_URL = "https://github.com/BoringCode/jadsh/wiki"
 SHELL_STATUS_RUN = 1
 SHELL_STATUS_STOP = 0
 
-import re
-VARIABLE_PATTERN = re.compile("([$][A-Za-z])\w+")
-
 import os
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 

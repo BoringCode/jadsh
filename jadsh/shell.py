@@ -25,7 +25,6 @@ class Shell():
 
         self.builtins = {}
         self.history = []
-        self.environment = {}
 
         # The screen object
         self.screenObject = ""
@@ -225,6 +224,13 @@ class Shell():
         # Allow commands to be split (so user can enter multiple commands at once)
         commands = re.split('[;]+', string)
         for cmd in commands:
+            # Help the user
+            if not self.syntax_check(cmd):
+                continue
+
+            # Expand variables in place. Allows $VARIABLE and ${VARIABLE}
+            cmd = self.expandvars(cmd)
+
             # Get tokens from user input
             try:
                 tokens = self.tokenize(cmd)
@@ -232,9 +238,6 @@ class Shell():
                 self.message("jadsh error", "Malformed command")
                 return
 
-            # Help the user
-            if self.syntax_check(tokens) == False:
-                continue
 
             # Execute command
             try:
@@ -244,6 +247,18 @@ class Shell():
                 return
             except KeyboardInterrupt:
                 return
+
+    def expandvars(self, path, default=None, skip_escaped=True):
+        """Expand environment variables of form $var and ${var}.
+           If parameter 'skip_escaped' is True, all escaped variable references
+           (i.e. preceded by backslashes) are skipped.
+           Unknown variables are set to 'default'. If 'default' is None,
+           they are left unchanged.
+        """
+        def replace_var(m):
+            return os.environ.get(m.group(2) or m.group(1), m.group(0) if default is None else default)
+        reVar = (r'(?<!\\)' if skip_escaped else '') + r'\$(\w+|\{([^}]*)\})'
+        return re.sub(reVar, replace_var, path)
 
     def execute(self, tokens):
         """
@@ -332,7 +347,7 @@ class Shell():
             attr.append('1')
         return '\x1b[%sm%s\x1b[0m' % (';'.join(attr), string)
 
-    def syntax_check(self, tokens):
+    def syntax_check(self, cmd):
         """
         Check the syntax of a command from the user
 
@@ -342,11 +357,11 @@ class Shell():
 
         @return Boolean
         """
-        if not tokens: return True
-        if "&&" in tokens:
+        if not cmd: return True
+        if "&&" in cmd:
             self.message("jadsh error", "Unsupported use of &&. In jadsh, please use 'COMMAND; and COMMAND'")
             return False
-        if "$" in tokens:
+        if cmd[0] == "$":
             self.message("jadsh error", "Unsupported use of $VARIABLE. In jadsh, variables cannot be used directly. Use 'eval $VARIABLE' instead.")
             return False
         return True
