@@ -120,7 +120,7 @@ class Shell():
 
     def keyboardInput(self):
         """
-        GrscreenObject keyboard input from the terminal and evaluate it as necessary
+        Grab keyboard input from the terminal and evaluate it as necessary
 
         @return Boolean
         """
