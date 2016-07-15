@@ -2,7 +2,6 @@ import unittest
 import os, getpass, socket, sys, tempfile, time
 from inspect import *
 
-sys.path.append("../jadsh")
 from jadsh.shell import Shell
 
 class BaseShellTest(unittest.TestCase):

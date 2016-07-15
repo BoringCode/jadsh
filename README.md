@@ -36,7 +36,19 @@ python -m jadsh
 
 ## Tests
 
-Testing is an important part of ensuring program stability. Individual tests are located in the `tests/` directory.
+Testing is an important part of ensuring program stability. Individual tests are located in the `test/` directory.
+
+Run all tests:
+
+```bash
+python -m unittest discover
+```
+
+Run an individual test suite (for example test_shell.py):
+
+```bash
+python -m unittest test.test_shell
+```
 
 ## Learning jadsh
 

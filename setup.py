@@ -30,7 +30,7 @@ setup(
 
 	keywords = "jadsh shell terminal",
 
-	packages = find_packages(exclude=['tests']),
+	packages = find_packages(exclude=['test']),
 
 	extras_require = {
 		"test": ['coverage']
