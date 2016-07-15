@@ -19,13 +19,15 @@ class BaseShellTest(unittest.TestCase):
 		self.shell = Shell(stdin = self.stdin, stdout = self.stdout)
 
 	def tearDown(self):
+		self.stdin.close()
+		self.stdout.close()
 		for file in self.files:
 			os.unlink(file)
 
 	def tempFile(self):
 		(file_descriptor, file_name) = tempfile.mkstemp()
 		self.files.append(file_name)
-		return open(file_name, "rw+")
+		return open(file_name, "r+")
 
 	def readStdout(self, seekPosition = 0):
 		self.stdout.seek(seekPosition)

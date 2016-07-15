@@ -33,7 +33,6 @@ class Shell():
         # Grab individual characters from standard input
         self.getch = Getch(self.stdin)
 
-
         # Output welcome message
         self.welcome()
 

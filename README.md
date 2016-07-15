@@ -59,7 +59,7 @@ python -m unittest discover
 Run an individual test suite (for example test_shell.py):
 
 ```bash
-python -m unittest test.test_shell
+python -m unittest tests.test_shell
 ```
 
 ## Learning jadsh
