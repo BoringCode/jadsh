@@ -6,31 +6,27 @@ class cd(Builtin):
 	"""	
 	cd -- change directory
 
-   Synopsis
-       cd [DIRECTORY]
+	Synopsis
+	   cd [DIRECTORY]
 
-   Description
-       cd changes the current working directory.
+	Description
+	   cd changes the current working directory.
 
-       If DIRECTORY is supplied, it will become the new directory. If no parameter is given, the contents of the HOME
-       environment variable will be used.
+	   If DIRECTORY is supplied, it will become the new directory. If no parameter is given, the contents of the HOME
+	   environment variable will be used.
 
-       If DIRECTORY is a relative path, the paths found in the CDPATH environment variable array will be tried as prefixes
-       for the specified path.
+	Examples
+	   cd
+	     changes the working directory to your home directory.
 
-   Examples
-       cd
-         changes the working directory to your home directory.
-
-       cd /usr/local/bin/
-         changes the working directory to /usr/local/bin
-         
+	   cd /usr/local/bin/
+	     changes the working directory to /usr/local/bin         
 	"""
 
 	def setup(self):
 		self.directory_history = []
 
-	def execute(self, path = "~", *args):
+	def execute(self, path = os.environ["HOME"], *args):
 		if "--help" in path or "--help" in args:
 			self.help()
 		else:
