@@ -11,9 +11,11 @@ class Builtin:
 		pass
 
 	def help(self):
-		help_text = self.__doc__
+		import inspect
+
+		help_text = inspect.getdoc(self)
 		if help_text is None:
 			self.shell.message("Help error", "This program (" + self.__class__.__name__ + ") doesn't not have a help text")
 		else:
-			self.shell.stdout.write("\t" + str(help_text.strip()))
+			self.shell.stdout.write(help_text)
 			self.shell.stdout.write("\n")

@@ -6,18 +6,17 @@ class help(Builtin):
 	"""	
 	help -- display help about jadsh
 
-   Synopsis
-       help
+	Synopsis
+	   help
 
-   Description
-       help gives you help
+	Description
+	   help gives you help
 
-       See also: recursion
+	   See also: recursion
 
-   Examples
-       help
-         Displays general help about jadsh
-         
+	Examples
+	   help
+	     Displays general help about jadsh         
 	"""
 	def execute(self, path = "~", *args):
 		if "--help" in path or "--help" in args:

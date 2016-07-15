@@ -290,6 +290,10 @@ class Shell():
         command = tokens[0]
         args = tokens[1:]
 
+        # Dumb history tracking
+        # TODO: Build function and output to history file
+        self.history.append({ "command": command, "args": args, "input": self.user_input })
+
         # Check if builtin command
         if self.builtin(command):
             return self.builtins[command].execute(*args)
@@ -299,8 +303,6 @@ class Shell():
 
         # Block program execution until process is finished
         process.wait()
-        
-        self.history.append({ "command": command, "args": args, "input": self.user_input })
 
         # Assume all went well, continue
         return constants.SHELL_STATUS_RUN
