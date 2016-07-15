@@ -28,11 +28,23 @@ jadsh
 
 ## Development
 
-You can launch the shell during development by running the following command from the root project directory:
+Setting up your development environment requires a few extra steps. 
 
 ```bash
-python -m jadsh
+virtualenv venv
+source venv/bin/activate
+python setup.py develop
 ```
+
+Now the application is installed locally and you can continue to make changes without reinstalling.
+
+Launch the shell.
+
+```bash
+jadsh
+```
+
+Alternatively you can launch the shell as a direct module: `python -m jadsh`
 
 ## Tests
 
