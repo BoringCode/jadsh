@@ -17,14 +17,12 @@ class export(Builtin):
 			self.help()
 		elif len(args) == 0:
 			self.show_environment()
-		elif len(args) == 1:
+		else:
 			pair = args[0].split("=")
 			if len(pair) == 2 and self.pattern.match(pair[0]):
 				os.environ[str(pair[0])] = str(pair[1])
 			else:
 				self.shell.message("export error", "Can't export variables to environment", False)
-		else:
-			self.shell.message("export error", "Can't export variables to environment", False)
 		return constants.SHELL_STATUS_RUN
 
 	def show_environment(self):

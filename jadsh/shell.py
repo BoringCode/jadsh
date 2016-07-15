@@ -134,11 +134,10 @@ class Shell():
 
         # Error checking
         if char_code is False:
-            # Attempt to execute whatever is left
-            if self.user_input != "":
-                return True
             self.status = constants.SHELL_STATUS_STOP
-            return False
+            # Attempt to execute whatever is left
+            execute = self.user_input != ""
+            return execute
 
         # Escape sequence, handle appropriately
         if char_code >= constants.ARROW_UP:
@@ -167,6 +166,7 @@ class Shell():
                     # Increment the cursor position by the index of the found word plus its length
                     # Have to do this because of spaces (I don't know if there is a space in front of the word)
                     self.cursor_position += forward_string.find(words[0]) + len(words[0])
+            # History
             elif char_code == constants.ARROW_UP:
                 if self.history_position < len(self.history):
                     self.history_position += 1
@@ -192,14 +192,14 @@ class Shell():
             # Move cursor to beginning of line
             elif char_code == constants.HOME_KEY:
                 self.cursor_position = 0
-            return False
+            return execute
 
         # Convert ASCII code to actual character
         current_char = chr(char_code)
 
         # Error checking
         if len(current_char) == 0:
-            return False
+            execute = False
 
         # Backspace
         if char_code == constants.BACKSPACE:
@@ -221,10 +221,10 @@ class Shell():
             self.saveCursor()
         elif char_code == constants.TAB:
             # Ignore tabs for now, eventually we will do tab completion
-            return False
+            execute = False
         # Ignore these keys
         elif char_code == constants.ESC:
-            return False
+            execute = False
         # Regular input, add it to the user input at the cursor position
         else:
             self.user_input = self.user_input[:self.cursor_position] + current_char + self.user_input[self.cursor_position:]
@@ -244,7 +244,7 @@ class Shell():
                 continue
 
             # Expand variables in place. Allows $VARIABLE and ${VARIABLE}
-            cmd = self.expandvars(cmd)
+            cmd = self.expandVars(cmd)
 
             # Get tokens from user input
             try:
@@ -252,7 +252,6 @@ class Shell():
             except:
                 self.message("jadsh error", "Malformed command")
                 return
-
 
             # Execute command
             try:
@@ -263,12 +262,11 @@ class Shell():
             except KeyboardInterrupt:
                 return
 
-    def expandvars(self, path, default=None, skip_escaped=True):
-        """Expand environment variables of form $var and ${var}.
-           If parameter 'skip_escaped' is True, all escaped variable references
-           (i.e. preceded by backslashes) are skipped.
-           Unknown variables are set to 'default'. If 'default' is None,
-           they are left unchanged.
+    def expandVars(self, path, default=None, skip_escaped=True):
+        """
+        Expand environment variables of form $var and ${var}.
+        If parameter 'skip_escaped' is True, all escaped variable references (i.e. preceded by backslashes) are skipped.
+        Unknown variables are set to 'default'. If 'default' is None, they are left unchanged.
         """
         def replace_var(m):
             return os.environ.get(m.group(2) or m.group(1), m.group(0) if default is None else default)
