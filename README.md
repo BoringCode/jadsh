@@ -8,15 +8,22 @@ Zero dependencies. Built entirely using Python stdlib and escape sequences.
 
 ## Requirements
 
-- Python 3.5+
+- Python 2.7+
+- setuptools
 - Unix terminal with ANSI escape code support
 
 ## Setup
 
+Install the shell on your machine.
+
+```bash
+python setup.py install
+```
+
 Launch the shell.
 
 ```bash
-./jadsh.py
+jadsh
 ```
 
 ## Learning jadsh

@@ -88,19 +88,22 @@ class _GetchUnix():
 
     def __call__(self, returnImmediately = False, characters = 1):
         import sys, tty, fcntl, os, termios
-        fd = sys.stdin.fileno()
-        old_settings = termios.tcgetattr(fd)
-        old_flags = fcntl.fcntl(fd, fcntl.F_GETFL)
+        if self.stdin.isatty():
+            fd = self.stdin.fileno()
+            old_settings = termios.tcgetattr(fd)
+            old_flags = fcntl.fcntl(fd, fcntl.F_GETFL)
         try:
-            if returnImmediately:
-                fcntl.fcntl(fd, fcntl.F_SETFL, old_flags | os.O_NONBLOCK)
-            tty.setraw(fd)
+            if self.stdin.isatty():
+                if returnImmediately:
+                    fcntl.fcntl(fd, fcntl.F_SETFL, old_flags | os.O_NONBLOCK)
+                tty.setraw(fd)
             if returnImmediately:
                 ch = self.stdin.buffer.raw.read(characters)
             else:
                 ch = self.stdin.read(characters)
         finally:
-            if returnImmediately:
-                fcntl.fcntl(fd, fcntl.F_SETFL, old_flags)
-            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+            if self.stdin.isatty():
+                if returnImmediately:
+                    fcntl.fcntl(fd, fcntl.F_SETFL, old_flags)
+                termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
         return ch
