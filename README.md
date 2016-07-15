@@ -26,6 +26,18 @@ Launch the shell.
 jadsh
 ```
 
+## Development
+
+You can launch the shell during development by running the following command from the root project directory:
+
+```bash
+python -m jadsh
+```
+
+## Tests
+
+Testing is an important part of ensuring program stability. Individual tests are located in the `tests/` directory.
+
 ## Learning jadsh
 
 When you start jadsh, you should see this:
