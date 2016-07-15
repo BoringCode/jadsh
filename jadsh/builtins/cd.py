@@ -26,7 +26,7 @@ class cd(Builtin):
 	def setup(self):
 		self.directory_history = []
 
-	def execute(self, path = os.environ["HOME"], *args):
+	def execute(self, path = os.getenv("HOME", "~"), *args):
 		if "--help" in path or "--help" in args:
 			self.help()
 		else:
