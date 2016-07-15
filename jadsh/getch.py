@@ -6,8 +6,8 @@ class Getch():
 
     Returns the char code and handles special terminal input (escape sequences)
     """
-    def __init__(self, ifd):
-        self.read = _GetchUnix(ifd)
+    def __init__(self, stdin):
+        self.read = _GetchUnix(stdin)
 
     def __call__(self):
         read = self.read()
@@ -82,11 +82,11 @@ class Getch():
         
 
 class _GetchUnix():
-    def __init__(self, ifd):
-        self.ifd = ifd
+    def __init__(self, stdin):
+        self.stdin = stdin
         import tty, sys
 
-    def __call__(self, returnImmediately = False):
+    def __call__(self, returnImmediately = False, characters = 1):
         import sys, tty, fcntl, os, termios
         fd = sys.stdin.fileno()
         old_settings = termios.tcgetattr(fd)
@@ -96,9 +96,9 @@ class _GetchUnix():
                 fcntl.fcntl(fd, fcntl.F_SETFL, old_flags | os.O_NONBLOCK)
             tty.setraw(fd)
             if returnImmediately:
-                ch = self.ifd.buffer.raw.read(1)
+                ch = self.stdin.buffer.raw.read(characters)
             else:
-                ch = self.ifd.read(1)
+                ch = self.stdin.read(characters)
         finally:
             if returnImmediately:
                 fcntl.fcntl(fd, fcntl.F_SETFL, old_flags)

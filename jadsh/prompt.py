@@ -17,17 +17,5 @@ class Prompt():
     	pwd = pwd.replace(self.home, "~")
     	return pwd
 
-    def title(self, title = "jadsh"): 
-    	return "\x1b]2;" + title + "\x07"
-
-    def hilite(self, string, status = False, bold = False):
-    	attr = []
-    	if status:
-    		# green
-    		attr.append('32')
-    	else:
-    		# red
-    		attr.append('31')
-    	if bold:
-    		attr.append('1')
-    	return '\x1b[%sm%s\x1b[0m' % (';'.join(attr), string)
+    def title(self, title = "jadsh"):
+        return "\x1b]2;" + title + "\x07"

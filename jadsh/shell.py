@@ -33,6 +33,7 @@ class Shell():
         # Grab individual characters from standard input
         self.getch = Getch(self.stdin)
 
+
         # Output welcome message
         self.welcome()
 
@@ -53,22 +54,23 @@ class Shell():
         """
         Draw the terminal so the user can see it
         """
-        # Reset cursor to previous position
-        # TODO: Handle edge case when current line is at the bottom of the terminal
-        self.screenAppend("\x1b8")
+        if self.stdout.isatty():
+            # Reset cursor to previous position
+            # TODO: Handle edge case when current line is at the bottom of the terminal
+            self.screenAppend("\x1b8")
 
-        # Hide the cursor
-        self.screenAppend("\x1b[?25l");
+            # Hide the cursor
+            self.screenAppend("\x1b[?25l");
 
-        # Clear everything after the current line
-        self.screenAppend("\x1b[J\r")
+            # Clear everything after the current line
+            self.screenAppend("\x1b[J\r")
 
-        # Save the current cursor position
-        self.screenAppend("\x1b7")
+            # Save the current cursor position
+            self.screenAppend("\x1b7")
 
-        # Set the terminal title
-        title = self.prompt.title("jadsh " + os.getcwd())
-        self.screenAppend(title)
+            # Set the terminal title
+            title = self.prompt.title("jadsh " + os.getcwd())
+            self.screenAppend(title)
 
         # Generate the prompt
         prompt = self.prompt.generate()
@@ -77,14 +79,18 @@ class Shell():
         # Display the current input (what the user is typing)
         self.screenAppend(self.user_input)
 
-        self.screenAppend("\x1b[?25h") # Show cursor
+        if self.stdout.isatty():
+            self.screenAppend("\x1b[?25h") # Show cursor
 
-        # Calculate cursor position and place at correct spot
-        # TODO: Handle edge case when user input goes to more than 1 line
-        position = len(self.user_input) - self.cursor_position
-        if position > 0:
-            # Move cursor backwards
-            self.screenAppend("\x1b[" + str(position) + "D")            
+            # Calculate cursor position and place at correct spot
+            # TODO: Handle edge case when user input goes to more than 1 line
+            position = len(self.user_input) - self.cursor_position
+            if position > 0:
+                # Move cursor backwards
+                self.screenAppend("\x1b[" + str(position) + "D")
+
+        if not self.stdout.isatty():
+            self.screenAppend("\n")
 
         # Output everything to the screen
         self.stdout.write(self.screenObject)
@@ -337,11 +343,18 @@ class Shell():
         self.stdout.write("\n")
         self.saveCursor()
 
+    def realCursorPosition(self):
+        sys.stdout.write("\x1b[6n");a=sys.stdin.read(10)
+        print(a)
+        print(sys.stdin.isatty())
+
     def saveCursor(self):
-        self.stdout.write("\x1b7")
+        if self.stdout.isatty():
+            self.stdout.write("\x1b7")
 
     def resetCursor(self):
-        self.stdout.write("\x1b8")
+        if self.stdout.isatty():
+            self.stdout.write("\x1b8")
 
     def hilite(self, string, status = False, bold = False):
         """
@@ -349,6 +362,7 @@ class Shell():
 
         @return String
         """
+        if not self.stdout.isatty(): return string
         attr = []
         if status:
             # green
