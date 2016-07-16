@@ -48,7 +48,7 @@ Alternatively you can launch the shell as a direct module: `python -m jadsh`
 
 ## Tests
 
-Testing is an important part of ensuring program stability. Individual tests are located in the `test/` directory.
+Testing is an important part of ensuring program stability. Individual tests are located in the `jadsh/tests/` directory.
 
 Run all tests:
 
@@ -59,7 +59,7 @@ python -m unittest discover
 Run an individual test suite (for example test_shell.py):
 
 ```bash
-python -m unittest tests.test_shell
+python -m unittest jadsh.tests.test_shell
 ```
 
 ## Learning jadsh

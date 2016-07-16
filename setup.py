@@ -30,11 +30,7 @@ setup(
 
 	keywords = "jadsh shell terminal",
 
-	packages = find_packages(exclude=['test']),
-
-	extras_require = {
-		"test": ['coverage']
-	},
+	packages = find_packages(exclude=['jadsh.tests']),
 
 	entry_points = {
 		"console_scripts": [

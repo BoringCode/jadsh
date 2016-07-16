@@ -1,5 +1,5 @@
 import unittest
-import os, getpass, socket, sys, tempfile, time
+import os, sys, tempfile, time
 from multiprocessing import Process
 
 from jadsh.shell import Shell
@@ -25,8 +25,11 @@ class BaseShellTest(unittest.TestCase):
 		stdin.close()
 
 	def tearDown(self):
-		# Safely exit the shell
-		self.runCommand("exit")
+		try:
+			# Safely exit the shell
+			self.runCommand("exit")
+		except:
+			pass
 		# Wait for shell to exit before continuing
 		self.shell.join()
 		# Close file descriptors
@@ -58,22 +61,3 @@ class BaseShellTest(unittest.TestCase):
 		pwd = os.getcwd()
 		pwd = pwd.replace(home, "~")
 		return pwd
-
-class StartupTest(BaseShellTest):
-	def test_startup(self):
-		"""
-		On startup, the shell should display a welcome message and the prompt
-		"""
-		username = getpass.getuser()
-		hostname = socket.gethostname()
-
-		expected_value = "Welcome to jadsh, Just Another Dumb SHell\n"
-		expected_value += "Type help for instructions on how to use jadsh\n"
-		expected_value += username + "@" + hostname + ":" + self.getcwd() + ":$ \n"
-
-		welcome = ''.join(self.getOutput())
-
-		self.assertEqual(welcome, expected_value, "Welcome message does not appear")
-
-if __name__ == '__main__':
-	unittest.main()
