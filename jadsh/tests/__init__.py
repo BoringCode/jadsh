@@ -25,13 +25,11 @@ class BaseShellTest(unittest.TestCase):
 		stdin.close()
 
 	def tearDown(self):
-		try:
+		if self.shell.exitcode is None:
 			# Safely exit the shell
 			self.runCommand("exit")
-		except:
-			pass
-		# Wait for shell to exit before continuing
-		self.shell.join()
+			# Wait for shell to exit before continuing
+			self.shell.join()
 		# Close file descriptors
 		self.stdin.close()
 		self.stdout.close()
@@ -54,7 +52,13 @@ class BaseShellTest(unittest.TestCase):
 		# Slightly hacky way to make sure the shell is finished with its job before grabbing output
 		time.sleep(pause)
 		self.stdin.seek(0)
-		return self.stdin.readlines()
+		return self.cleanOutput(self.stdin.readlines())
+
+	def cleanOutput(self, output):
+		for i in range(len(output)):
+			output[i] = output[i].strip()
+		return output
+
 
 	def getcwd(self):
 		home = os.path.expanduser("~")

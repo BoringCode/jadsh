@@ -9,18 +9,20 @@ class ShellTest(BaseShellTest):
 		username = getpass.getuser()
 		hostname = socket.gethostname()
 
-		expected_value = "Welcome to jadsh, Just Another Dumb SHell\n"
-		expected_value += "Type help for instructions on how to use jadsh\n"
-		expected_value += username + "@" + hostname + ":" + self.getcwd() + ":$ \n"
+		expected_value = [
+			"Welcome to jadsh, Just Another Dumb SHell", 
+			"Type help for instructions on how to use jadsh",
+			username + "@" + hostname + ":" + self.getcwd() + ":$"
+		]
 
-		welcome = ''.join(self.getOutput())
+		welcome = self.getOutput()
 
 		self.assertEqual(welcome, expected_value, "Welcome message does not appear")
 
 	def test_exit(self):
 		output = self.runCommand("exit")
 
-		exit_message = "Bye!\n"
+		exit_message = "Bye!"
 		self.assertEqual(output[-1], exit_message, "Shell should exit with 'Bye!' message")
 
 		exit_code = 0
