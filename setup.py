@@ -10,7 +10,8 @@ def readme(fname):
 		import pypandoc
 		return pypandoc.convert(fname, "rst")
 	except:
-		return None
+		print("warning: pypandoc isn't installed, can't convert from markdown")
+		return read(fname)
 
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
