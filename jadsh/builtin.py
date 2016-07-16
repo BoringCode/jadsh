@@ -19,3 +19,4 @@ class Builtin:
 		else:
 			self.shell.stdout.write(help_text)
 			self.shell.stdout.write("\n")
+			self.shell.stdout.flush()

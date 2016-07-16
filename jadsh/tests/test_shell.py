@@ -20,8 +20,10 @@ class ShellTest(BaseShellTest):
 	def test_exit(self):
 		output = self.runCommand("exit")
 
-		exit_code = 0
+		exit_message = "Bye!\n"
+		self.assertEqual(output[-1], exit_message, "Shell should exit with 'Bye!' message")
 
+		exit_code = 0
 		self.assertEqual(self.shell.exitcode, exit_code, "Shell should exit with a status of 0")
 
 

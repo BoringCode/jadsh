@@ -18,4 +18,5 @@ class exit(Builtin):
 			return constants.SHELL_STATUS_RUN
 		else:
 			self.shell.stdout.write("\n" + "Bye!" + "\n")
+			self.shell.stdout.flush()
 			return constants.SHELL_STATUS_STOP

@@ -42,6 +42,7 @@ class Shell():
     def welcome(self):
         self.stdout.write("Welcome to jadsh, Just Another Dumb SHell\n")
         self.stdout.write("Type " + self.hilite("help", True) + " for instructions on how to use jadsh\n")
+        self.stdout.flush()
 
     def screenAppend(self, string):
         """
@@ -224,6 +225,7 @@ class Shell():
             execute = True
             self.stdout.write("\n")
             self.saveCursor()
+            self.stdout.flush()
         elif char_code == constants.TAB:
             # Ignore tabs for now, eventually we will do tab completion
             execute = False
@@ -342,12 +344,8 @@ class Shell():
         self.stdout.write(self.hilite(str(title) + ": ", status))
         self.stdout.write(str(message))
         self.stdout.write("\n")
+        self.stdout.flush()
         self.saveCursor()
-
-    def realCursorPosition(self):
-        sys.stdout.write("\x1b[6n");a=sys.stdin.read(10)
-        print(a)
-        print(sys.stdin.isatty())
 
     def saveCursor(self):
         if self.stdout.isatty():
