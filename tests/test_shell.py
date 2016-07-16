@@ -2,44 +2,53 @@ import unittest
 import os, getpass, socket, sys, tempfile, time
 from inspect import *
 
+from multiprocessing import Process, Pipe
+
 from jadsh.shell import Shell
+
+def createShell(childStdin, stdout):
+	stdin = os.fdopen(childStdin, "r")
+	shell = Shell(stdin = stdin, stdout = stdout)
+	stdin.close()
 
 class BaseShellTest(unittest.TestCase):
 	def setUp(self):
-		self.files = []
-		self.stdin = self.tempFile()
-		self.stdout = self.tempFile()
+		childStdin, parentStdout = os.pipe()
 
-		# Execute all commands that are listed in the doc string
-		commands = getdoc(getattr(self, self._testMethodName))
-		if commands:
-			self.stdin.write(commands + "\nexit\n")
-			self.stdin.seek(0)
+		# Significantly easier to read a file, than with a pipe
+		self.stdin = self.tempFile("r+")
 
-		self.shell = Shell(stdin = self.stdin, stdout = self.stdout)
+		# Communicate with the shell via a pipe
+		self.stdout = os.fdopen(parentStdout, "w")
+
+		self.shell = Process(target=createShell, args=(childStdin, self.stdin, ))
+		self.shell.start()
 
 	def tearDown(self):
+		# Safely exit the shell
+		self.runCommand("exit")
+		# Wait for shell to exit before continuing
+		self.shell.join()
 		self.stdin.close()
 		self.stdout.close()
-		for file in self.files:
-			os.unlink(file)
+		# Delete temp file
+		os.unlink(self.stdin.name)
 
-	def tempFile(self):
+	def tempFile(self, permissions):
 		(file_descriptor, file_name) = tempfile.mkstemp()
-		self.files.append(file_name)
-		return open(file_name, "r+")
+		os.close(file_descriptor)
+		return open(file_name, permissions)
 
-	def readStdout(self, seekPosition = 0):
-		self.stdout.seek(seekPosition)
-		return self.stdout.readlines()
+	def runCommand(self, command):
+		self.stdout.write(str(command) + "\n")
+		self.stdout.flush()
+		return self.getOutput()
 
-	def findString(self, string):
-		valid = False
-		for line in self.readStdout():
-			if string in line:
-				valid = True
-				break
-		return valid
+	def getOutput(self, pause = 0.1):
+		# Slightly hacky way to make sure the shell is finished with its job before grabbing output
+		time.sleep(pause)
+		self.stdin.seek(0)
+		return self.stdin.readlines()
 
 	def getcwd(self):
 		home = os.path.expanduser("~")
@@ -49,6 +58,9 @@ class BaseShellTest(unittest.TestCase):
 
 class StartupTest(BaseShellTest):
 	def test_startup(self):
+		"""
+		On startup, the shell should display a welcome message and the prompt
+		"""
 		username = getpass.getuser()
 		hostname = socket.gethostname()
 
@@ -56,31 +68,9 @@ class StartupTest(BaseShellTest):
 		expected_value += "Type help for instructions on how to use jadsh\n"
 		expected_value += username + "@" + hostname + ":" + self.getcwd() + ":$ \n"
 
-		welcome = ''.join(self.readStdout())
+		welcome = ''.join(self.getOutput())
 
 		self.assertEqual(welcome, expected_value, "Welcome message does not appear")
-
-class cdTest(BaseShellTest):
-	def test_cd_no_args(self):
-		"""
-		cd /
-		cd
-		"""
-		self.assertEqual(os.getenv("HOME"), os.getcwd(), "cd with no args should go to $HOME")
-
-	def test_cd_args(self):
-		"""
-		cd /
-		cd /etc/
-		"""
-		self.assertEqual("/etc", os.getcwd(), "cd with args should change directory to first arg")
-
-	def test_cd_help(self):
-		"""
-		cd --help
-		"""
-		helpText = "cd -- change directory"
-		self.assertTrue(self.findString(helpText))
 
 if __name__ == '__main__':
 	unittest.main()
