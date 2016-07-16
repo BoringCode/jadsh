@@ -2,6 +2,8 @@
 
 > Just Another Dumb SHell
 
+[![Build Status](https://travis-ci.org/BoringCode/jadsh.svg?branch=master)](https://travis-ci.org/BoringCode/jadsh)
+
 Experiments with making a really dumb, slow shell in Python. This will never be usable. Heck you probably shouldn't even look at it. But, I'm making it.
 
 Zero dependencies. Built entirely using Python stdlib and escape sequences.
