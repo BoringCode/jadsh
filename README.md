@@ -33,6 +33,7 @@ Setting up your development environment requires a few extra steps.
 ```bash
 virtualenv venv
 source venv/bin/activate
+pip install -r requirements.txt
 python setup.py develop
 ```
 
@@ -103,4 +104,4 @@ Tested on Ubuntu 16.04. Should support any unix terminal with ANSI escape code s
 
 &copy; Bradley Rosenfeld
 
-Licensed under the [MIT license](LICENSE)
+Licensed under the [MIT license](https://github.com/BoringCode/jadsh/blob/master/LICENSE)

@@ -59,7 +59,6 @@ class BaseShellTest(unittest.TestCase):
 			output[i] = output[i].strip()
 		return output
 
-
 	def getcwd(self):
 		home = os.path.expanduser("~")
 		pwd = os.getcwd()
