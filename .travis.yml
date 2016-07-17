@@ -11,3 +11,5 @@ python:
 install: true
 # command to run tests
 script: "python -m unittest discover"
+notifications:
+  email: false
