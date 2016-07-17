@@ -1,5 +1,11 @@
-import unittest, getpass, socket, os, tempfile
+import unittest, getpass, socket, os
 from jadsh.tests import BaseShellTest
+
+# Python2.7 does not have the module I need
+try:
+	from tempfile import TemporaryDirectory
+except:
+	from legacy_support import TemporaryDirectory
 
 class cdTest(BaseShellTest):
 	def test_default_behavior(self):
@@ -12,7 +18,7 @@ class cdTest(BaseShellTest):
 		self.assertEqual(output[-2], home, "cd should by default go to $HOME")
 
 	def test_cd_with_args(self):
-		with tempfile.TemporaryDirectory() as temp_dir:
+		with TemporaryDirectory() as temp_dir:
 			self.runCommand("cd " + temp_dir)
 
 			output = self.runCommand("pwd")
@@ -22,7 +28,7 @@ class cdTest(BaseShellTest):
 	def test_previous_directory(self):
 		initial_dir = self.runCommand("pwd")[-2]
 
-		with tempfile.TemporaryDirectory() as temp_dir:
+		with TemporaryDirectory() as temp_dir:
 			self.runCommand("cd " + temp_dir)
 
 			self.runCommand("cd -")
