@@ -11,7 +11,7 @@ class Prompt():
 
     def generate(self):
         pwd = self.getcwd()
-        return self.username + "@" + self.hostname + ":" + pwd + ":" + self.promptChar + ' '
+        return "%s@%s:%s:%s " % (self.username, self.hostname, pwd, self.promptChar)
 
     def getcwd(self):
         try:
@@ -22,4 +22,4 @@ class Prompt():
         return self.pwd
 
     def title(self, title = "jadsh"):
-        return "\x1b]2;" + title + "\x07"
+        return "\x1b]2;%s\x07" % title

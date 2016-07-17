@@ -41,7 +41,7 @@ class Shell():
 
     def welcome(self):
         self.stdout.write("Welcome to jadsh, Just Another Dumb SHell\n")
-        self.stdout.write("Type " + self.hilite("help", True) + " for instructions on how to use jadsh\n")
+        self.stdout.write("Type %s for instructions on how to use jadsh\n" % self.hilite("help", True))
         self.stdout.flush()
 
     def screenAppend(self, string):
@@ -69,7 +69,7 @@ class Shell():
             self.screenAppend("\x1b7")
 
             # Set the terminal title
-            title = self.prompt.title("jadsh " + os.getcwd())
+            title = self.prompt.title("jadsh %s" % os.getcwd())
             self.screenAppend(title)
 
         # Generate the prompt
@@ -87,7 +87,7 @@ class Shell():
             position = len(self.user_input) - self.cursor_position
             if position > 0:
                 # Move cursor backwards
-                self.screenAppend("\x1b[" + str(position) + "D")
+                self.screenAppend("\x1b[%sD" % str(position))
 
         if not self.stdout.isatty():
             self.screenAppend("\n")
@@ -341,9 +341,8 @@ class Shell():
         """
         Display message in the terminal
         """
-        self.stdout.write(self.hilite(str(title) + ": ", status))
-        self.stdout.write(str(message))
-        self.stdout.write("\n")
+        self.stdout.write(self.hilite("%s: " % str(title), status))
+        self.stdout.write("%s\n" % str(message))
         self.stdout.flush()
         self.saveCursor()
 
