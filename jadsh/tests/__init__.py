@@ -1,6 +1,7 @@
 import unittest
-import os, sys, tempfile, time, random, string
+import os, sys, tempfile, time, random, string, getpass, socket
 from multiprocessing import Process
+import jadsh.constants
 
 from jadsh.shell import Shell
 
@@ -26,10 +27,11 @@ class BaseShellTest(unittest.TestCase):
 
 	def tearDown(self):
 		if self.shell.exitcode is None:
-			# Safely exit the shell
-			self.runCommand("exit")
-			# Wait for shell to exit before continuing
-			self.shell.join()
+			# Attempt to safely exit the shell
+			self.runCommand(chr(jadsh.constants.CTRL_C) + "exit")
+			# If shell hasn't safely exited, terminate it
+			if self.shell.exitcode is None:
+				self.shell.terminate()
 		# Close file descriptors
 		self.stdin.close()
 		self.stdout.close()
@@ -65,8 +67,15 @@ class BaseShellTest(unittest.TestCase):
 		pwd = pwd.replace(home, "~")
 		return pwd
 
-	def randomString(self, length, numbers = False):
+	def getPrompt(self):
+		username = getpass.getuser()
+		hostname = socket.gethostname()
+		return username + "@" + hostname + ":" + self.getcwd() + ":$"
+
+	def randomString(self, length, numbers = False, punctuation = False):
 		choices = string.ascii_uppercase
 		if numbers:
 			choices += string.digits
+		if punctuation:
+			choices += string.punctuation
 		return ''.join(random.SystemRandom().choice(choices) for _ in range(length))
