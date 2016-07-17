@@ -3,6 +3,7 @@ import jadsh.constants as constants
 
 class Prompt():
     def __init__(self, promptChar = "$"):
+        self.pwd = self.getcwd()
         self.home = os.path.expanduser("~")
         self.username = getpass.getuser()
         self.hostname = socket.gethostname()
@@ -13,9 +14,12 @@ class Prompt():
         return self.username + "@" + self.hostname + ":" + pwd + ":" + self.promptChar + ' '
 
     def getcwd(self):
-    	pwd = os.getcwd()
-    	pwd = pwd.replace(self.home, "~")
-    	return pwd
+        try:
+            self.pwd = os.getcwd()
+            self.pwd = self.pwd.replace(self.home, "~")
+        except:
+            pass
+        return self.pwd
 
     def title(self, title = "jadsh"):
         return "\x1b]2;" + title + "\x07"

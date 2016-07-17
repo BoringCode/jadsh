@@ -1,5 +1,5 @@
 import unittest
-import os, sys, tempfile, time
+import os, sys, tempfile, time, random, string
 from multiprocessing import Process
 
 from jadsh.shell import Shell
@@ -64,3 +64,9 @@ class BaseShellTest(unittest.TestCase):
 		pwd = os.getcwd()
 		pwd = pwd.replace(home, "~")
 		return pwd
+
+	def randomString(self, length, numbers = False):
+		choices = string.ascii_uppercase
+		if numbers:
+			choices += string.digits
+		return ''.join(random.SystemRandom().choice(choices) for _ in range(length))

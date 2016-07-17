@@ -1,4 +1,4 @@
-import unittest, getpass, socket
+import unittest, getpass, socket, os
 from jadsh.tests import BaseShellTest
 
 class ShellTest(BaseShellTest):
@@ -28,6 +28,29 @@ class ShellTest(BaseShellTest):
 		exit_code = 0
 		self.assertEqual(self.shell.exitcode, exit_code, "Shell should exit with a status of 0")
 
+	def test_command_execution(self):
+		output = self.runCommand("whoami")
+
+		username = getpass.getuser()
+
+		self.assertEqual(output[-2], username, "Whoami should execute and return current username")
+
+	def test_variable_expansion(self):
+		home = os.getenv("HOME")
+		output = self.runCommand("echo $HOME")[-2]
+
+		self.assertEqual(output, home, "Shell should expand variables in commands")
+
+		output = self.runCommand("echo \$HOME")[-2]
+		self.assertEqual("$HOME", output, "Shell should escape variables in commands")
+
+	def test_chain_commands(self):
+		username = getpass.getuser()
+		pwd = os.getcwd()
+
+		output = self.runCommand("whoami; pwd")
+
+		self.assertTrue(username in output and pwd in output, "Shell should allow chaining commands with `;`")
 
 if __name__ == '__main__':
 	unittest.main()

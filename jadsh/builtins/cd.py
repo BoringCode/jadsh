@@ -24,7 +24,7 @@ class cd(Builtin):
 	"""
 
 	def setup(self):
-		self.directory_history = []
+		self.previous_directory = None
 
 	def execute(self, path = os.getenv("HOME", "~"), *args):
 		if "--help" in path or "--help" in args:
@@ -32,8 +32,15 @@ class cd(Builtin):
 		else:
 			# Go back to previous directory
 			if (path == "-"):
-				path = self.directory_history[-1]
-			self.directory_history.append(os.getcwd())
+				if self.previous_directory is None:
+					self.shell.message("cd", "Hit end of history...")
+					return constants.SHELL_STATUS_RUN
+				else:
+					path = self.previous_directory
+			self.previous_directory = os.getcwd()
 			path = os.path.expanduser(path)
-			os.chdir(path)
+			try:
+				os.chdir(path)
+			except:
+				self.shell.message("cd", "The directory \"%s\" does not exist" % path)
 		return constants.SHELL_STATUS_RUN

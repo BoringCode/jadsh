@@ -10,7 +10,7 @@ class export(Builtin):
 	"""
 
 	def setup(self):
-		self.pattern = re.compile("([A-Za-z])\w+")
+		self.pattern = re.compile("^[a-zA-Z]+$")
 
 	def execute(self, *args):
 		if "--help" in args:
