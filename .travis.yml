@@ -13,3 +13,6 @@ install: true
 script: "python -m unittest discover"
 notifications:
   email: false
+branches:
+  only:
+  - master
