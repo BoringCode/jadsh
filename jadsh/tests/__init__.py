@@ -70,7 +70,7 @@ class BaseShellTest(unittest.TestCase):
 	def getPrompt(self):
 		username = getpass.getuser()
 		hostname = socket.gethostname()
-		return username + "@" + hostname + ":" + self.getcwd() + ":$"
+		return "%s@%s:%s:$" % (username, hostname, self.getcwd())
 
 	def randomString(self, length, numbers = False, punctuation = False):
 		choices = string.ascii_uppercase
