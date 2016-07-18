@@ -79,6 +79,14 @@ class ShellTest(BaseShellTest):
 		output = self.runCommand("echo \$HOME")[-2]
 		self.assertEqual("$HOME", output, "Shell should escape variables in commands")
 
+	def test_command_substitution_chaining(self):
+		username = getpass.getuser()
+		pwd = os.getcwd()
+
+		output = self.runCommand("echo (pwd; whoami)")
+
+		self.assertTrue(pwd in output and username in output, "Shell should chain commands in command substitutions")
+
 	def test_chain_commands(self):
 		username = getpass.getuser()
 		pwd = os.getcwd()

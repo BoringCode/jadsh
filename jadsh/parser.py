@@ -13,11 +13,6 @@ class Parser:
 
 		self.comments = "#"
 
-		self.wordchars = ('abcdfeghijklmnopqrstuvwxyz'
-		                  'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_'
-		                  'ßàáâãäåæçèéêëìíîïðñòóôõöøùúûüýþÿ'
-		                  'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞ')
-
 		self.command_split = ';'
 		self.whitespace = ' \t\r\n'
 		self.quotes = '\'"'
@@ -91,6 +86,7 @@ class Parser:
 							output = self.runner.execute(cmd, True)
 							if output["stdout"]:
 								token += output["stdout"].read().decode("utf-8")
+								output["stdout"].close()
 				# Add paren to token if the stack has parens in it already
 				# This ensures that the paren is preserved if it is wrapped in parens already
 				# Allows paren nesting
@@ -121,13 +117,8 @@ class Parser:
 			# Should I escape the next character?
 			escaped = nextchar == self.escape
 
-			# Output escape character
-			if escaped:
-				nextchar = chr(7)
-
 			# Add char to current token
 			token = token + nextchar
-
 
 		# If the loop has been terminated, but there are still elements left on the stack
 		if len(token_stack) > 0:
@@ -151,7 +142,8 @@ class Parser:
 		    return os.environ.get(m.group(2) or m.group(1), m.group(0) if default is None else default)
 
 		reVar = (r'(?<!\\)' if skip_escaped else '') + r'\$(\w+|\{([^}]*)\})'
-		return re.sub(reVar, replace_var, path)
+		string = re.sub(reVar, replace_var, path)
+		return string.replace("\\", "")
 
 	def check_syntax(self, instream):
 		"""
@@ -165,7 +157,3 @@ class Parser:
 			raise ValueError("Unsupported use of $VARIABLE. In jadsh, variables cannot be used directly. Use 'eval $VARIABLE' instead.")
 
 		return True
-
-if __name__ == "__main__":
-	parser = Parser()
-	print(parser.parse("echo (pwd; whoami)"))
