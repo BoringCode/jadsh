@@ -282,9 +282,6 @@ class Shell():
 
         self.saveCursor()
 
-        # Export status to shell
-        os.environ["status"] = str(results["status"])
-
         # Builtins have the power to change the status of the shell
         if results["builtin"]:
             return results["status"]

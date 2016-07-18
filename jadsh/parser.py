@@ -108,12 +108,10 @@ class Parser:
 				if nextchar == state:
 					token_stack.pop()
 					quoted = len(token_stack) != 0
-					continue
 				# Add char to stack if it doesn't match
 				elif state is None:
 					quoted = True
 					token_stack.append(nextchar)
-					continue
 			
 			# Should I escape the next character?
 			escaped = nextchar == self.escape

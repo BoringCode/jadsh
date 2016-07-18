@@ -26,7 +26,7 @@ class Runner:
 			stdout = self.stdout
 
 		# Expand variables at execution time
-		tokens = [ self.expandVars(token) for token in tokens ]
+		tokens = [ self.cleanToken(self.expandVars(token)) for token in tokens ]
 		command = tokens[0]
 		args = tokens[1:]
 
@@ -48,6 +48,8 @@ class Runner:
 				"status": process.returncode,
 				"builtin": False
 			}
+		# Export status to environment
+		os.environ["status"] = str(obj["status"])
 		return obj
 
 	def expandVars(self, path, default=None, skip_escaped=True, skip_single_quotes = True):
@@ -64,7 +66,18 @@ class Runner:
 
 		reVar = (r'(?<!\\)' if skip_escaped else '') + r'\$(\w+|\{([^}]*)\})'
 		string = re.sub(reVar, replace_var, path)
-		return string.replace("\\", "")
+		return string
+
+	def cleanToken(self, token):
+		"""
+		Remove wrapping quotation marks and other elements from token
+		"""
+		if len(token) == 0: return string
+		quotes = "'\""
+		if len(token) > 1 and token[0] in quotes and token[-1] in quotes:
+			token = token[1:-1]
+		token = token.replace("\\", "")
+		return token
 
 	def builtin(self, command):
 		"""
