@@ -11,6 +11,8 @@ class Runner:
 		# Some builtins have odd names to account for Python keywords (e.g. _and)
 		self.builtin_prefixes = ['', '_']
 
+		self.ignore_status = ["and", "or"]
+
 	def execute(self, tokens, return_output = False):
 		"""
 		Execute tokens and return status code of command
@@ -51,8 +53,9 @@ class Runner:
 				"status": process.returncode,
 				"builtin": False
 			}
-		# Export status to environment
-		os.environ["status"] = str(obj["status"])
+		if not command in self.ignore_status:
+			# Export status to environment
+			os.environ["status"] = str(obj["status"])
 		return obj
 
 	def expandVars(self, path, default=None, skip_escaped=True, skip_single_quotes = True):

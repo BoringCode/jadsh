@@ -265,10 +265,8 @@ class Shell():
                 # Failed status
                 os.environ["status"] = str(constants.EXIT_CODE_NOT_FOUND)
                 self.message(cmd[0], "command not found")
-                return
             except KeyboardInterrupt:
-                continue
-
+                pass
             self.last_status = int(os.environ["status"])
 
     def execute(self, tokens):

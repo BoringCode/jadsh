@@ -3,17 +3,17 @@ from jadsh.runner import Runner
 from jadsh.builtin import Builtin
 import jadsh.constants as constants
 
-class _and(Builtin):
+class _or(Builtin):
 	"""
-	and -- conditionally execute a command
+	or -- conditionally execute a command
 
 	Synopsis
-		COMMAND1; and COMMAND2
+		COMMAND1; or COMMAND2
 
 	Description
-		and executes a command if the current exit status (set by the previous command) is equal to 0
+		or executes a command if the current exit status (set by the previous command) is not equal to 0
 
-		and does not change the current exit status
+		or does not change the current exit status
 	"""
 
 	def setup(self):
@@ -24,7 +24,7 @@ class _and(Builtin):
 			self.help()
 		else:
 			status = int(os.getenv("status", constants.EXIT_CODE_SUCCESS))
-			if status == constants.EXIT_CODE_SUCCESS:
+			if status != constants.EXIT_CODE_SUCCESS:
 				results = self.runner.execute(args)
 				if results["builtin"]:
 					return {

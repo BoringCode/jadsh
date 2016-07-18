@@ -92,5 +92,35 @@ class exportTest(BaseShellTest):
 
 		self.assertTrue(help_message in output, "export --help should display help message")
 
+class andTest(BaseShellTest):
+	def test_good_prior_command(self):
+		pwd = os.getcwd()
+		output = self.runCommand("ls; and pwd")
+
+		self.assertEqual(pwd, output[-2], "`and` should run the command if the previous command was successful")
+
+	def test_bad_prior_command(self):
+		pwd = os.getcwd()
+		bad_command = self.randomString(20)
+
+		output = self.runCommand("%s; and pwd" % bad_command)
+
+		self.assertFalse(pwd in output, "`and` shouldn't run the command if the previous command failed")
+
+class orTest(BaseShellTest):
+	def test_good_prior_command(self):
+		pwd = os.getcwd()
+		output = self.runCommand("ls; or pwd")
+
+		self.assertFalse(pwd in output, "`or` shouldn't run the command if the previous command was successful")
+
+	def test_bad_prior_command(self):
+		pwd = os.getcwd()
+		bad_command = self.randomString(20)
+
+		output = self.runCommand("%s; or pwd" % bad_command)
+
+		self.assertEqual(pwd, output[-2], "`or` should run the command if the previous command failed")
+
 if __name__ == '__main__':
 	unittest.main()
