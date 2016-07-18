@@ -31,8 +31,9 @@ class Parser:
 
 		instream = instream.strip()
 
-		if not self.check_syntax(instream):
-			raise ValueError("Illegal command name \"%s\"" % instream)
+		# Check syntax before running through tokenizer
+		# Will raise errors which must be caught
+		self.check_syntax(instream)
 
 		tokens = self.read_tokens(instream)
 
@@ -53,6 +54,10 @@ class Parser:
 			# Ignore comments
 			if nextchar in self.comments:
 				break
+
+			# Syntax check to help users
+			if not quoted and token == "&&":
+				raise ValueError("Unsupported use of &&. In jadsh, please use 'COMMAND; and COMMAND'")
 
 			# Split tokens on whitespace
 			if nextchar in self.whitespace and len(token_stack) == 0:
@@ -132,12 +137,12 @@ class Parser:
 		"""
 		Pre-check syntax before parsing tokens
 		"""
-		# Ignore empty strings
-		if len(instream) == 0: return True
-
 		# Command substitution not supported
 		if instream[0] in self.parens:
-			return False
+			raise ValueError("Illegal command name \"%s\"" % instream)
+
+		if instream[0] == "$":
+			raise ValueError("Unsupported use of $VARIABLE. In jadsh, variables cannot be used directly. Use 'eval $VARIABLE' instead.")
 
 		return True
 
@@ -146,4 +151,4 @@ class Parser:
 ## Testing
 parser = Parser()
 
-print(parser.parse("echo (cat (pwd))"))
+print(parser.parse("$variable"))
