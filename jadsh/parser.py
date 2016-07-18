@@ -104,23 +104,29 @@ class Parser:
 			# Quotes
 			if nextchar in self.quotes and not escaped:
 				state = None
-				quoted = True
 				# Check if stack has characters on it
 				if len(token_stack) > 0:
 					state = token_stack[-1]
 				# Check if char equals the last item on the stack
 				if nextchar == state:
 					token_stack.pop()
-					if len(token_stack) == 0: quoted = False
+					quoted = len(token_stack) != 0
+					continue
 				# Add char to stack if it doesn't match
 				elif state is None:
+					quoted = True
 					token_stack.append(nextchar)
+					continue
 			
 			# Should I escape the next character?
 			escaped = nextchar == self.escape
 
+			# Output escape character
+			if escaped:
+				nextchar = chr(7)
+
 			# Add char to current token
-			token += nextchar
+			token = token + nextchar
 
 
 		# If the loop has been terminated, but there are still elements left on the stack
