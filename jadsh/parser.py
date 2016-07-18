@@ -72,6 +72,9 @@ class Parser:
 			# Command substitution
 			if nextchar in self.parens and not escaped and not quoted:
 				state = None
+				# Create substitution string that will be passed to task runner
+				if substitution is False:
+					substitution_string = ''
 				if len(token_stack) > 0:
 					state = token_stack[-1]
 				# Found matching paren, pop from the stack
@@ -80,9 +83,7 @@ class Parser:
 					# Reached the end of the paren group, recursively execute the token (this allows nesting commands)
 					# Set the value of the current token equal to the stdout of the command
 					if len(token_stack) == 0:
-						commands_string = token
-						token = ''
-						for cmd in self.read_tokens(commands_string):
+						for cmd in self.read_tokens(substitution_string):
 							output = self.runner.execute(cmd, True)
 							if output["stdout"]:
 								token += output["stdout"].read().decode("utf-8")
@@ -90,7 +91,7 @@ class Parser:
 				# Add paren to token if the stack has parens in it already
 				# This ensures that the paren is preserved if it is wrapped in parens already
 				# Allows paren nesting
-				if len(token_stack) != 0: token += nextchar
+				if len(token_stack) != 0: substitution_string += nextchar
 				# Add paren to stack
 				if state is None or nextchar == state:
 					token_stack.append(nextchar)
@@ -117,8 +118,12 @@ class Parser:
 			# Should I escape the next character?
 			escaped = nextchar == self.escape
 
-			# Add char to current token
-			token = token + nextchar
+			# Add char to substitution string
+			if substitution:
+				substitution_string = substitution_string + nextchar
+			# Append char to token if we aren't creating a command substitution
+			else:
+				token = token + nextchar
 
 		# If the loop has been terminated, but there are still elements left on the stack
 		if len(token_stack) > 0:

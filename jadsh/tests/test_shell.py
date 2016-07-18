@@ -79,6 +79,16 @@ class ShellTest(BaseShellTest):
 		output = self.runCommand("echo \$HOME")[-2]
 		self.assertEqual("$HOME", output, "Shell should escape variables in commands")
 
+	def test_command_substitution(self):
+		pwd = os.getcwd()
+		variable_name = self.randomString(20)
+		variable_value = "(pwd)"
+
+		self.runCommand("export %s=%s" % (variable_name, variable_value))
+
+		output = self.runCommand("echo $%s" % variable_name)[-2]
+		self.assertEqual(output, pwd, "Shell should substitute command with its output")
+
 	def test_command_substitution_chaining(self):
 		username = getpass.getuser()
 		pwd = os.getcwd()
@@ -86,6 +96,18 @@ class ShellTest(BaseShellTest):
 		output = self.runCommand("echo (pwd; whoami)")
 
 		self.assertTrue(pwd in output and username in output, "Shell should chain commands in command substitutions")
+
+	def test_unbalanced_command(self):
+		error_message = "jadsh error: Unexpected end of string"
+
+		bad_strings = [
+			'echo "test'
+			"echo 'test"
+			"echo (pwd"
+		]
+
+		for command in bad_strings:
+			self.assertEqual(self.runCommand(command)[-2], error_message, "jadsh should output error on unbalanced command: `%s`" % command)
 
 	def test_chain_commands(self):
 		username = getpass.getuser()
@@ -97,7 +119,7 @@ class ShellTest(BaseShellTest):
 
 	def test_invalid_commands(self):
 		invalid_command = self.randomString(20, True)
-		error_message = invalid_command + ": command not found"
+		error_message = "%s: command not found" % invalid_command
 
 		output = self.runCommand(invalid_command)[-2]
 
