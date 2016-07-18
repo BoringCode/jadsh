@@ -103,7 +103,7 @@ class Parser:
 			
 			# Add char to current token
 			# Ignore character if escaped and not in quote
-			if not escaped and not quoted:
+			if not (escaped and quoted):
 				token += nextchar
 
 			# Should I escape the next character?
@@ -111,7 +111,7 @@ class Parser:
 
 		# If the loop has been terminated, but there are still elements left on the stack
 		if len(token_stack) > 0:
-			raise ValueError("Invalid string")
+			raise ValueError("Unexpected end of string")
 		# Safe to add final token to list of tokens
 		elif len(token) > 0:
 			tokens.append(self.expandVars(token))
@@ -151,4 +151,4 @@ class Parser:
 ## Testing
 parser = Parser()
 
-print(parser.parse("$variable"))
+print(parser.parse("echo 'blah && blah'"))
