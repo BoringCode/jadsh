@@ -15,8 +15,12 @@ class exit(Builtin):
 	def execute(self, *args):
 		if "--help" in args:
 			self.help()
-			return constants.SHELL_STATUS_RUN
+			return {
+				"returncode": constants.SHELL_STATUS_RUN
+			}
 		else:
-			self.shell.stdout.write("\n" + "Bye!" + "\n")
-			self.shell.stdout.flush()
-			return constants.SHELL_STATUS_STOP
+			self.stdout.write("\n" + "Bye!" + "\n")
+			self.stdout.flush()
+			return {
+				"returncode": constants.SHELL_STATUS_STOP
+			}

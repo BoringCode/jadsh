@@ -33,7 +33,7 @@ class cd(Builtin):
 			# Go back to previous directory
 			if (path == "-"):
 				if self.previous_directory is None:
-					self.shell.message("cd", "Hit end of history...")
+					self.message("cd", "Hit end of history...")
 					return constants.SHELL_STATUS_RUN
 				else:
 					path = self.previous_directory
@@ -42,5 +42,7 @@ class cd(Builtin):
 			try:
 				os.chdir(path)
 			except:
-				self.shell.message("cd", "The directory \"%s\" does not exist" % path)
-		return constants.SHELL_STATUS_RUN
+				self.message("cd", "The directory \"%s\" does not exist" % path)
+		return {
+			"returncode": constants.SHELL_STATUS_RUN
+		}

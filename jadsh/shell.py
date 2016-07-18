@@ -1,9 +1,9 @@
 import sys
 import os
-import importlib
 import re
-import shlex
-import subprocess
+
+from jadsh.parser import Parser
+from jadsh.runner import Runner
 from jadsh.getch import Getch
 from jadsh.prompt import Prompt
 import jadsh.constants as constants
@@ -23,7 +23,9 @@ class Shell():
         self.stdin = stdin
         self.stdout = stdout
 
-        self.builtins = {}
+        self.runner = Runner(stdin = self.stdin, stdout = self.stdout)
+        self.parser = Parser(self.runner)
+
         self.history = []
         self.history_position = 0
 
@@ -244,41 +246,21 @@ class Shell():
         Parse new commands from the user and then pass the commands to be executed
         """
         # Allow commands to be split (so user can enter multiple commands at once)
-        commands = re.split('[;]+', string)
+        try:
+            commands = self.parser.parse(string)
+        except Exception as e:
+            self.message("jadsh error", str(e))
+            return
+
         for cmd in commands:
-            # Help the user
-            if not self.syntax_check(cmd):
-                continue
-
-            # Expand variables in place. Allows $VARIABLE and ${VARIABLE}
-            cmd = self.expandVars(cmd)
-
-            # Get tokens from user input
-            try:
-                tokens = self.tokenize(cmd)
-            except:
-                self.message("jadsh error", "Malformed command")
-                return
-
             # Execute command
             try:
-                self.status = self.execute(tokens)
+                self.status = self.execute(cmd)
             except OSError as e:
-                self.message(tokens[0], "command not found")
+                self.message(cmd[0], "command not found")
                 return
             except KeyboardInterrupt:
                 return
-
-    def expandVars(self, path, default=None, skip_escaped=True):
-        """
-        Expand environment variables of form $var and ${var}.
-        If parameter 'skip_escaped' is True, all escaped variable references (i.e. preceded by backslashes) are skipped.
-        Unknown variables are set to 'default'. If 'default' is None, they are left unchanged.
-        """
-        def replace_var(m):
-            return os.environ.get(m.group(2) or m.group(1), m.group(0) if default is None else default)
-        reVar = (r'(?<!\\)' if skip_escaped else '') + r'\$(\w+|\{([^}]*)\})'
-        return re.sub(reVar, replace_var, path)
 
     def execute(self, tokens):
         """
@@ -288,54 +270,19 @@ class Shell():
         """
         if len(tokens) == 0: return constants.SHELL_STATUS_RUN
 
-        command = tokens[0]
-        args = tokens[1:]
-
         # Dumb history tracking
         # TODO: Build function and output to history file
-        self.history.append({ "command": command, "args": args, "input": self.user_input })
+        self.history.append({ "command": tokens[0], "args": tokens[1:], "input": self.user_input })
 
-        # Check if builtin command
-        if self.builtin(command):
-            return self.builtins[command].execute(*args)
-        
-        # Open command as a subprocess
-        process = subprocess.Popen(tokens, stdin = self.stdin, stdout = self.stdout)
+        results = self.runner.execute(tokens)
 
-        # Block program execution until process is finished
-        process.wait()
+        self.saveCursor()
+
+        if results["builtin"]:
+            return results["status"]
 
         # Assume all went well, continue
         return constants.SHELL_STATUS_RUN
-
-    def builtin(self, command):
-        """
-        Check if a command is a builtin
-
-        @return Boolean (is a builtin or not)
-        """
-        # Check if the command has already been loaded as a builtin
-        if command in self.builtins: return True
-        try:
-            # Attempt to load this command as a module. If it doesn't exist, the function will return false
-            mod = importlib.import_module("jadsh.builtins." + command)
-            # Generate new builtin object (passing this shell as an argument)
-            obj = getattr(mod, command)(self)
-            self.builtins[command] = obj
-            return True
-        except ImportError:
-            return False
-    
-    def tokenize(self, command):
-        """
-        Convert a text command into a list of tokens
-
-        shlex handles special cases (like "multi word strings") that a simple split on spaces can't handle
-
-        @return List
-        """
-        tokens = shlex.split(command)
-        return tokens
 
     def message(self, title, message, status = False):
         """
@@ -371,22 +318,3 @@ class Shell():
         if bold:
             attr.append('1')
         return '\x1b[%sm%s\x1b[0m' % (';'.join(attr), string)
-
-    def syntax_check(self, cmd):
-        """
-        Check the syntax of a command from the user
-
-        This is purely a helper function for users who are used to Bash or another shell
-
-        TODO: Make this function smarter
-
-        @return Boolean
-        """
-        if not cmd: return True
-        if "&&" in cmd:
-            self.message("jadsh error", "Unsupported use of &&. In jadsh, please use 'COMMAND; and COMMAND'")
-            return False
-        if cmd[0] == "$":
-            self.message("jadsh error", "Unsupported use of $VARIABLE. In jadsh, variables cannot be used directly. Use 'eval $VARIABLE' instead.")
-            return False
-        return True

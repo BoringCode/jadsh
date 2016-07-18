@@ -22,6 +22,8 @@ class help(Builtin):
 		if "--help" in path or "--help" in args:
 			self.help()
 		else:
-			self.shell.message("jadsh help", "Opening " + str(constants.HELP_URL) + "...", True)
+			self.message("jadsh help", "Opening " + str(constants.HELP_URL) + "...", True)
 			webbrowser.open(constants.HELP_URL)
-		return constants.SHELL_STATUS_RUN
+		return {
+			"returncode": constants.SHELL_STATUS_RUN
+		}

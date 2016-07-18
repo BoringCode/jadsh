@@ -1,14 +1,13 @@
 import os, sys, re
-from io import StringIO
 
-from jadsh.shell import Shell
 from jadsh.runner import Runner
 import jadsh.constants as constants
 
 class Parser:
 	"""A tokenizer that integrates with jadsh"""
-	def __init__(self):
-		self.runner = Runner()
+	def __init__(self, runner = Runner()):
+		# Reference to task runner
+		self.runner = runner
 
 		self.eof = None
 
@@ -19,32 +18,32 @@ class Parser:
 		                  'ßàáâãäåæçèéêëìíîïðñòóôõöøùúûüýþÿ'
 		                  'ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞ')
 
+		self.command_split = ';'
 		self.whitespace = ' \t\r\n'
 		self.quotes = '\'"'
 		self.parens = "()"
 		self.escape = '\\'
 
-	def parse(self, instream = None):
-		self.token = ''
-		self.token_stack = []
-		self.tokens = []
-
-		instream = instream.strip()
+	def parse(self, instream):
+		instream = str(instream).strip()
 
 		# Check syntax before running through tokenizer
 		# Will raise errors which must be caught
 		self.check_syntax(instream)
 
-		tokens = self.read_tokens(instream)
+		commands = self.read_tokens(instream)
 
-		return tokens
+		return commands
 
 	def read_tokens(self, instream):
-		tokens = []
+		commands = [[]]
+		commands_index = 0
 		token_stack = [] 
 		token = ''
+
 		quoted = False
 		escaped = False
+		substitution = False
 
 		for nextchar in instream:
 			# EOF
@@ -55,14 +54,24 @@ class Parser:
 			if nextchar in self.comments:
 				break
 
+			# Found a new command, increment
+			# Don't increment the command if we are performing a command substitution or if we are inside a quote
+			if nextchar == self.command_split and not quoted and not substitution and not escaped:
+				commands[commands_index].append(self.expandVars(token))
+				token = ''
+				commands.append([])
+				commands_index += 1
+				continue
+
 			# Syntax check to help users
 			if not quoted and token == "&&":
 				raise ValueError("Unsupported use of &&. In jadsh, please use 'COMMAND; and COMMAND'")
 
 			# Split tokens on whitespace
 			if nextchar in self.whitespace and len(token_stack) == 0:
-				tokens.append(self.expandVars(token))
-				token = ''
+				if len(token) > 0:
+					commands[commands_index].append(self.expandVars(token))
+					token = ''
 				continue
 
 			# Command substitution
@@ -76,7 +85,12 @@ class Parser:
 					# Reached the end of the paren group, recursively execute the token (this allows nesting commands)
 					# Set the value of the current token equal to the stdout of the command
 					if len(token_stack) == 0:
-						token = self.runner.execute(self.read_tokens(token))
+						commands_string = token
+						token = ''
+						for cmd in self.read_tokens(commands_string):
+							output = self.runner.execute(cmd, True)
+							if output["stdout"]:
+								token += output["stdout"].read().decode("utf-8")
 				# Add paren to token if the stack has parens in it already
 				# This ensures that the paren is preserved if it is wrapped in parens already
 				# Allows paren nesting
@@ -84,6 +98,7 @@ class Parser:
 				# Add paren to stack
 				if state is None or nextchar == state:
 					token_stack.append(nextchar)
+				substitution = len(token_stack) != 0
 				continue
 
 			# Quotes
@@ -101,22 +116,21 @@ class Parser:
 				elif state is None:
 					token_stack.append(nextchar)
 			
-			# Add char to current token
-			# Ignore character if escaped and not in quote
-			if not (escaped and quoted):
-				token += nextchar
-
 			# Should I escape the next character?
 			escaped = nextchar == self.escape
+
+			# Add char to current token
+			token += nextchar
+
 
 		# If the loop has been terminated, but there are still elements left on the stack
 		if len(token_stack) > 0:
 			raise ValueError("Unexpected end of string")
 		# Safe to add final token to list of tokens
 		elif len(token) > 0:
-			tokens.append(self.expandVars(token))
+			commands[commands_index].append(self.expandVars(token))
 
-		return tokens
+		return commands
 
 	def expandVars(self, path, default=None, skip_escaped=True, skip_single_quotes = True):
 		"""
@@ -146,9 +160,6 @@ class Parser:
 
 		return True
 
-
-
-## Testing
-parser = Parser()
-
-print(parser.parse("echo 'blah && blah'"))
+if __name__ == "__main__":
+	parser = Parser()
+	print(parser.parse("echo (pwd; whoami)"))
