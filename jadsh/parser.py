@@ -134,22 +134,6 @@ class Parser:
 
 		return commands
 
-	def expandVars(self, path, default=None, skip_escaped=True, skip_single_quotes = True):
-		"""
-		Expand environment variables of form $var and ${var}.
-		If parameter 'skip_escaped' is True, all escaped variable references (i.e. preceded by backslashes) are skipped.
-		Unknown variables are set to 'default'. If 'default' is None, they are left unchanged.
-		"""
-		# Don't expand vars in single quoted strings
-		if len(path) == 0 or (skip_single_quotes and (path[0] == "'" and path[-1] == "'")): return path
-
-		def replace_var(m):
-		    return os.environ.get(m.group(2) or m.group(1), m.group(0) if default is None else default)
-
-		reVar = (r'(?<!\\)' if skip_escaped else '') + r'\$(\w+|\{([^}]*)\})'
-		string = re.sub(reVar, replace_var, path)
-		return string.replace("\\", "")
-
 	def check_syntax(self, instream):
 		"""
 		Pre-check syntax before parsing tokens
