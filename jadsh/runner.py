@@ -8,4 +8,6 @@ class Runner:
 		self.stdout = stdout
 
 	def execute(self, tokens):
+		print("executing")
+		print(tokens)
 		return "result of command"

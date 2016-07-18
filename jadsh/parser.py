@@ -25,33 +25,27 @@ class Parser:
 		self.escape = '\\'
 
 	def parse(self, instream = None):
-		if isinstance(instream, str):
-			instream = StringIO(instream)
-
-		if instream is None:
-			instream = sys.stdin
-
-		self.instream = instream
-
 		self.token = ''
 		self.token_stack = []
 		self.tokens = []
 
-		tokens = self.read_tokens()
+		instream = instream.strip()
+
+		if not self.check_syntax(instream):
+			raise ValueError("Illegal command name \"%s\"" % instream)
+
+		tokens = self.read_tokens(instream)
 
 		return tokens
 
-	def read_tokens(self):
-		commands = []
+	def read_tokens(self, instream):
 		tokens = []
 		token_stack = [] 
 		token = ''
 		quoted = False
 		escaped = False
 
-		while True:
-			nextchar = self.instream.read(1)
-
+		for nextchar in instream:
 			# EOF
 			if nextchar is self.eof:
 				break
@@ -66,6 +60,27 @@ class Parser:
 				token = ''
 				continue
 
+			# Command substitution
+			if nextchar in self.parens and not escaped and not quoted:
+				state = None
+				if len(token_stack) > 0:
+					state = token_stack[-1]
+				# Found matching paren, pop from the stack
+				if state is not None and nextchar != state:
+					token_stack.pop()
+					# Reached the end of the paren group, recursively execute the token (this allows nesting commands)
+					# Set the value of the current token equal to the stdout of the command
+					if len(token_stack) == 0:
+						token = self.runner.execute(self.read_tokens(token))
+				# Add paren to token if the stack has parens in it already
+				# This ensures that the paren is preserved if it is wrapped in parens already
+				# Allows paren nesting
+				if len(token_stack) != 0: token += nextchar
+				# Add paren to stack
+				if state is None or nextchar == state:
+					token_stack.append(nextchar)
+				continue
+
 			# Quotes
 			if nextchar in self.quotes and not escaped:
 				state = None
@@ -78,14 +93,16 @@ class Parser:
 					token_stack.pop()
 					if len(token_stack) == 0: quoted = False
 				# Add char to stack if it doesn't match
-				else:
+				elif state is None:
 					token_stack.append(nextchar)
+			
+			# Add char to current token
+			# Ignore character if escaped and not in quote
+			if not escaped and not quoted:
+				token += nextchar
 
 			# Should I escape the next character?
 			escaped = nextchar == self.escape
-
-			# Add char to current token
-			token += nextchar
 
 		# If the loop has been terminated, but there are still elements left on the stack
 		if len(token_stack) > 0:
@@ -111,7 +128,22 @@ class Parser:
 		reVar = (r'(?<!\\)' if skip_escaped else '') + r'\$(\w+|\{([^}]*)\})'
 		return re.sub(reVar, replace_var, path)
 
+	def check_syntax(self, instream):
+		"""
+		Pre-check syntax before parsing tokens
+		"""
+		# Ignore empty strings
+		if len(instream) == 0: return True
+
+		# Command substitution not supported
+		if instream[0] in self.parens:
+			return False
+
+		return True
+
+
+
 ## Testing
 parser = Parser()
 
-print(parser.parse("echo $HOME"))
+print(parser.parse("echo (cat (pwd))"))
