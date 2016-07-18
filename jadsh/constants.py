@@ -4,8 +4,15 @@ PYTHON_VERSION = "3.5"
 
 HELP_URL = "https://github.com/BoringCode/jadsh/wiki"
 
-SHELL_STATUS_RUN = 1
-SHELL_STATUS_STOP = 0
+SHELL_STATUS_RUN = 0
+SHELL_STATUS_STOP = 1
+
+# Exit codes
+EXIT_CODE_GENERAL = 1
+EXIT_CODE_MISUSE_BUILTINS = 2
+EXIT_CODE_CANNOT_EXECUTE = 126
+EXIT_CODE_NOT_FOUND = 127
+EXIT_CODE_INVALID_ARG_TO_EXIT = 128
 
 import os
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))

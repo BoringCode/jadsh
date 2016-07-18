@@ -43,7 +43,7 @@ class Runner:
 			process.wait()
 			obj = {
 				"stdout": process.stdout,
-				"status": process.stdin,
+				"status": process.returncode,
 				"builtin": False
 			}
 		return obj

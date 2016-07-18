@@ -36,6 +36,12 @@ class ShellTest(BaseShellTest):
 		self.assertEqual(output, exit_message, "CTRL-D should cause shell to exit with 'Bye!' message")
 		self.assertEqual(self.shell.exitcode, exit_code, "Shell should exit with status of 0")
 
+	def test_status(self):
+		expected_status = "0"
+		output = self.runCommand("whoami; echo $status")[-2]
+
+		self.assertEqual(expected_status, output, "Shell should set status after command execution")
+
 	def test_backspace(self):
 		command = self.randomString(20)
 		backspace = chr(jadsh.constants.BACKSPACE)

@@ -253,14 +253,20 @@ class Shell():
             return
 
         for cmd in commands:
+            # Expand environment vars at runtime
+            tokens = [ self.parser.expandVars(token) for token in cmd ]
             # Execute command
             try:
-                self.status = self.execute(cmd)
+                self.status = self.execute(tokens)
+                if self.status == constants.SHELL_STATUS_STOP:
+                    break
             except OSError as e:
-                self.message(cmd[0], "command not found")
+                # Failed status
+                os.environ["status"] = str(constants.EXIT_CODE_NOT_FOUND)
+                self.message(tokens[0], "command not found")
                 return
             except KeyboardInterrupt:
-                return
+                continue
 
     def execute(self, tokens):
         """
@@ -278,6 +284,10 @@ class Shell():
 
         self.saveCursor()
 
+        # Export status to shell
+        os.environ["status"] = str(results["status"])
+
+        # Builtins have the power to change the status of the shell
         if results["builtin"]:
             return results["status"]
 

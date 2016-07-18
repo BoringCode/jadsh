@@ -52,7 +52,7 @@ class Parser:
 			# Found a new command, increment
 			# Don't increment the command if we are performing a command substitution or if we are inside a quote
 			if nextchar == self.command_split and not quoted and not substitution and not escaped:
-				commands[commands_index].append(self.expandVars(token))
+				commands[commands_index].append(token)
 				token = ''
 				commands.append([])
 				commands_index += 1
@@ -65,7 +65,7 @@ class Parser:
 			# Split tokens on whitespace
 			if nextchar in self.whitespace and len(token_stack) == 0:
 				if len(token) > 0:
-					commands[commands_index].append(self.expandVars(token))
+					commands[commands_index].append(token)
 					token = ''
 				continue
 
@@ -130,7 +130,7 @@ class Parser:
 			raise ValueError("Unexpected end of string")
 		# Safe to add final token to list of tokens
 		elif len(token) > 0:
-			commands[commands_index].append(self.expandVars(token))
+			commands[commands_index].append(token)
 
 		return commands
 
