@@ -12,7 +12,7 @@ class Shell():
     """
     jadsh, Just Another Dumb SHell
     """
-    def __init__(self, prompt = Prompt(), stdin = sys.stdin, stdout = sys.stdout, status = constants.SHELL_STATUS_RUN):
+    def __init__(self, prompt = Prompt(), stdin = sys.stdin, stdout = sys.stdout, stderr = sys.stderr, status = constants.SHELL_STATUS_RUN):
         """
         Expects a new Prompt object and the status the shell should start with
 
@@ -22,8 +22,9 @@ class Shell():
         self.prompt = prompt
         self.stdin = stdin
         self.stdout = stdout
+        self.stderr = stderr
 
-        self.runner = Runner(stdin = self.stdin, stdout = self.stdout)
+        self.runner = Runner(stdin = self.stdin, stdout = self.stdout, stderr = self.stderr)
         self.parser = Parser(self.runner)
 
         self.history = []

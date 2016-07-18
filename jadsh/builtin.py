@@ -1,10 +1,11 @@
 import sys
 
 class Builtin:
-	def __init__(self, stdin = sys.stdin, stdout = sys.stdout):
+	def __init__(self, stdin = sys.stdin, stdout = sys.stdout, stderr = sys.stderr):
 		# Set stdin and stdout
 		self.stdin = stdin
 		self.stdout = stdout
+		self.stderr = stderr
 		self.setup()
 
 	def setup(self):

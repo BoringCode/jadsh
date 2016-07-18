@@ -2,9 +2,10 @@ import os, re, sys, subprocess, importlib
 import jadsh.constants as constants
 
 class Runner:
-	def __init__(self, stdin = sys.stdin, stdout = sys.stdout):
+	def __init__(self, stdin = sys.stdin, stdout = sys.stdout, stderr = sys.stderr):
 		self.stdin = stdin
 		self.stdout = stdout
+		self.stderr = stderr
 
 		self.builtins = {}
 
@@ -40,7 +41,7 @@ class Runner:
 			}
 		else:
 			# Open command as a subprocess
-			process = subprocess.Popen(tokens, stdin = self.stdin, stdout = stdout)
+			process = subprocess.Popen(tokens, stdin = self.stdin, stdout = stdout, stderr = self.stderr)
 			# Block program execution until process is finished
 			process.wait()
 			obj = {
@@ -91,7 +92,7 @@ class Runner:
 		    # Attempt to load this command as a module. If it doesn't exist, the function will return false
 		    mod = importlib.import_module("jadsh.builtins." + command)
 		    # Generate new builtin object (passing this shell as an argument)
-		    obj = getattr(mod, command)(self.stdin, self.stdout)
+		    obj = getattr(mod, command)(self.stdin, self.stdout, self.stderr)
 		    self.builtins[command] = obj
 		    return True
 		except ImportError:
