@@ -8,6 +8,8 @@ class Runner:
 		self.stderr = stderr
 
 		self.builtins = {}
+		# Some builtins have odd names to account for Python keywords (e.g. _and)
+		self.builtin_prefixes = ['', '_']
 
 	def execute(self, tokens, return_output = False):
 		"""
@@ -88,14 +90,16 @@ class Runner:
 		"""
 		# Check if the command has already been loaded as a builtin
 		if command in self.builtins: return True
-		try:
-		    # Attempt to load this command as a module. If it doesn't exist, the function will return false
-		    mod = importlib.import_module("jadsh.builtins." + command)
-		    # Generate new builtin object (passing this shell as an argument)
-		    obj = getattr(mod, command)(self.stdin, self.stdout, self.stderr)
-		    self.builtins[command] = obj
-		    return True
-		except ImportError:
-		    return False
+		for prefix in self.builtin_prefixes:
+			try:
+			    # Attempt to load this command as a module. If it doesn't exist, the function will return false
+			    mod = importlib.import_module("jadsh.builtins.%s" % command)
+			    # Generate new builtin object (passing this shell as an argument)
+			    obj = getattr(mod, prefix + command)(self.stdin, self.stdout, self.stderr)
+			    self.builtins[command] = obj
+			    return True
+			except:
+				continue
+		return False
 
 

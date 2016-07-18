@@ -30,6 +30,8 @@ class Shell():
         self.history = []
         self.history_position = 0
 
+        self.last_status = -1
+
         # The screen object
         self.screenObject = ""
 
@@ -266,6 +268,8 @@ class Shell():
                 return
             except KeyboardInterrupt:
                 continue
+
+            self.last_status = int(os.environ["status"])
 
     def execute(self, tokens):
         """
