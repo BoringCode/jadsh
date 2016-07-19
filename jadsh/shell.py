@@ -49,7 +49,6 @@ class Shell():
             self.loop()
         except BaseException as e:
             self.screen.message("jadsh error", "Fatal error, attempting to reload the shell")
-            self.screen.message("error", e)
             os.execvp("jadsh", ["jadsh"])
 
     def welcome(self):
