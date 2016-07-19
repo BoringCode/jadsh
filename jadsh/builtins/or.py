@@ -25,7 +25,7 @@ class _or(Builtin):
 		else:
 			status = int(os.getenv("status", constants.EXIT_CODE_SUCCESS))
 			if status != constants.EXIT_CODE_SUCCESS:
-				results = self.runner.execute(args)
+				results = self.runner(args)
 				if results["builtin"]:
 					return {
 						"returncode": results["status"]

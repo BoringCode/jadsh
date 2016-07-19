@@ -41,8 +41,14 @@ class Shell():
         # Output welcome message
         self.welcome()
 
-        # Start the main program loop
-        self.loop()
+        # Catch any uncaught errors
+        # Assume uncaught errors are bad, and reload the shell
+        try:
+            # Start the main program loop
+            self.loop()
+        except:
+            self.message("jadsh error", "Fatal error, attempting to reload the shell")
+            os.execvp("jadsh", ["jadsh"])
 
     def welcome(self):
         self.stdout.write("Welcome to jadsh, Just Another Dumb SHell\n")
@@ -250,7 +256,7 @@ class Shell():
         """
         # Allow commands to be split (so user can enter multiple commands at once)
         try:
-            commands = self.parser.parse(string)
+            commands = self.parser(string)
         except Exception as e:
             self.message("jadsh error", str(e))
             return
@@ -281,7 +287,7 @@ class Shell():
         # TODO: Build function and output to history file
         self.history.append({ "command": tokens[0], "args": tokens[1:], "input": self.user_input })
 
-        results = self.runner.execute(tokens)
+        results = self.runner(tokens)
 
         self.saveCursor()
 

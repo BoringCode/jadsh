@@ -2,6 +2,10 @@ import os, re, sys, subprocess, importlib
 import jadsh.constants as constants
 
 class Runner:
+	"""
+	Task runner for jadsh
+	This class handles executing programs and builtins
+	"""
 	def __init__(self, stdin = sys.stdin, stdout = sys.stdout, stderr = sys.stderr):
 		self.stdin = stdin
 		self.stdout = stdout
@@ -12,6 +16,12 @@ class Runner:
 		self.builtin_prefixes = ['', '_']
 
 		self.ignore_status = ["and", "or"]
+
+	def __call__(self, tokens, return_output = False):
+		"""
+		Direct calls are passed to the execute function
+		"""
+		return self.execute(tokens, return_output)
 
 	def execute(self, tokens, return_output = False):
 		"""
@@ -78,7 +88,7 @@ class Runner:
 		"""
 		Remove wrapping quotation marks and other elements from token
 		"""
-		if len(token) == 0: return string
+		if len(token) == 0: return token
 		quotes = "'\""
 		if len(token) > 1 and token[0] in quotes and token[-1] in quotes:
 			token = token[1:-1]
@@ -101,6 +111,8 @@ class Runner:
 			    obj = getattr(mod, prefix + command)(self.stdin, self.stdout, self.stderr)
 			    self.builtins[command] = obj
 			    return True
+			except ImportError:
+				return False
 			except:
 				continue
 		return False

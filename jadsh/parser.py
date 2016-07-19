@@ -4,13 +4,16 @@ from jadsh.runner import Runner
 import jadsh.constants as constants
 
 class Parser:
-	"""A tokenizer that integrates with jadsh"""
+	"""
+	A tokenizer that integrates with jadsh
+	This class handles parsing string input according to the jadsh syntax
+	Supports command expansions and comments
+	"""
 	def __init__(self, runner = Runner()):
 		# Reference to task runner
 		self.runner = runner
 
-		self.eof = None
-
+		# Line comments are ignored by the tokenizer
 		self.comments = "#"
 
 		self.command_split = ';'
@@ -19,20 +22,29 @@ class Parser:
 		self.parens = "()"
 		self.escape = '\\'
 
-	def parse(self, instream):
-		instream = str(instream).strip()
+	def __call__(self, instream):
+		"""
+		Calling the class directly will redirect to the parse function
+		"""
+		return self.parse(instream)
 
-		# Check syntax before running through tokenizer
-		# Will raise errors which must be caught
-		self.check_syntax(instream)
+	def parse(self, instream):
+		"""
+		Helper function to pass string to read_tokens() method
+		"""
+		# Remove all surrounding whitespace from string
+		instream = str(instream).strip()
 
 		commands = self.read_tokens(instream)
 
 		return commands
 
 	def read_tokens(self, instream):
-		commands = [[]]
-		commands_index = 0
+		"""
+		Takes an input string and returns a list of tokenized commands
+		"""
+		commands = []
+		tokens = []
 		token_stack = [] 
 		token = ''
 
@@ -40,9 +52,13 @@ class Parser:
 		escaped = False
 		substitution = False
 
+		# Check syntax before running through tokenizer
+		# Will raise errors which must be caught
+		if not self.check_syntax(instream): return commands
+
 		for nextchar in instream:
 			# EOF
-			if nextchar is self.eof:
+			if nextchar is None:
 				break
 
 			# Ignore comments
@@ -52,20 +68,22 @@ class Parser:
 			# Found a new command, increment
 			# Don't increment the command if we are performing a command substitution or if we are inside a quote
 			if nextchar == self.command_split and not quoted and not substitution and not escaped:
-				commands[commands_index].append(token)
+				tokens.append(token)
+				commands.append(tokens)
 				token = ''
-				commands.append([])
-				commands_index += 1
+				tokens = []
 				continue
 
 			# Syntax check to help users
 			if not quoted and token == "&&":
-				raise ValueError("Unsupported use of &&. In jadsh, please use 'COMMAND; and COMMAND'")
+				raise ValueError("Unsupported use of &&. In jadsh, please use `COMMAND; and COMMAND`")
+			elif not quoted and token == "||":
+				raise ValueError("Unsupported use of ||. In jadsh, please use `COMMAND; or COMMAND`")
 
 			# Split tokens on whitespace
 			if nextchar in self.whitespace and len(token_stack) == 0:
 				if len(token) > 0:
-					commands[commands_index].append(token)
+					tokens.append(token)
 					token = ''
 				continue
 
@@ -84,7 +102,7 @@ class Parser:
 					# Set the value of the current token equal to the stdout of the command
 					if len(token_stack) == 0:
 						for cmd in self.read_tokens(substitution_string):
-							output = self.runner.execute(cmd, True)
+							output = self.runner(cmd, True)
 							if output["stdout"]:
 								token += output["stdout"].read().decode("utf-8")
 								output["stdout"].close()
@@ -126,9 +144,10 @@ class Parser:
 		# If the loop has been terminated, but there are still elements left on the stack
 		if len(token_stack) > 0:
 			raise ValueError("Unexpected end of string")
-		# Safe to add final token to list of tokens
+		# Safely add final token to list of tokens
 		elif len(token) > 0:
-			commands[commands_index].append(token)
+			tokens.append(token)
+			commands.append(tokens)
 
 		return commands
 
