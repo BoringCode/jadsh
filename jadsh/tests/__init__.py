@@ -22,7 +22,7 @@ class BaseShellTest(unittest.TestCase):
 
 	def createShell(self, childStdin, stdout):
 		stdin = os.fdopen(childStdin, "r")
-		shell = Shell(stdin = stdin, stdout = stdout)
+		shell = Shell(args = ["--debug"], stdin = stdin, stdout = stdout)
 		stdin.close()
 
 	def tearDown(self):

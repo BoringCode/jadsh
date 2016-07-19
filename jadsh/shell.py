@@ -74,7 +74,10 @@ class Shell():
         execute = False
         while self.status == constants.SHELL_STATUS_RUN:
             # Set the terminal title
-            self.screen.title("jadsh %s" % os.getcwd())
+            try:
+                self.screen.title("jadsh %s" % os.getcwd())
+            except:
+                self.screen.title("jadsh")
 
             # Draw the screen
             self.screen(self.prompt.generate(), self.user_input)

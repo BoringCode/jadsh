@@ -37,7 +37,11 @@ class cd(Builtin):
 					return constants.SHELL_STATUS_RUN
 				else:
 					path = self.previous_directory
-			self.previous_directory = os.getcwd()
+			# Sometimes the user removes the previous directory which  is dumb
+			try:
+				self.previous_directory = os.getcwd()
+			except:
+				self.previous_directory = path
 			path = os.path.expanduser(path)
 			try:
 				os.chdir(path)
