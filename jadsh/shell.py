@@ -13,7 +13,7 @@ class Shell():
     """
     jadsh, Just Another Dumb SHell
     """
-    def __init__(self, prompt = Prompt(), stdin = sys.stdin, stdout = sys.stdout, stderr = sys.stderr, status = constants.SHELL_STATUS_RUN):
+    def __init__(self, prompt = Prompt(), args = [], stdin = sys.stdin, stdout = sys.stdout, stderr = sys.stderr, status = constants.SHELL_STATUS_RUN):
         """
         Expects a new Prompt object and the status the shell should start with
 
@@ -24,6 +24,10 @@ class Shell():
         self.stdin = stdin
         self.stdout = stdout
         self.stderr = stderr
+        self.args = args
+
+        # Set debug mode
+        self.debug = "--debug" in self.args
 
         self.runner = Runner(stdin = self.stdin, stdout = self.stdout, stderr = self.stderr)
         self.parser = Parser(self.runner)
@@ -48,8 +52,12 @@ class Shell():
             # Start the main program loop
             self.loop()
         except BaseException as e:
+            self.stderr.write(str(e))
             self.screen.message("jadsh error", "Fatal error, attempting to reload the shell")
-            os.execvp("jadsh", ["jadsh"])
+            if self.debug:
+                self.screen.write(e)
+            else:
+                os.execvp("jadsh", ["jadsh"])
 
     def welcome(self):
         self.screen.write("Welcome to jadsh, Just Another Dumb SHell\n", flush = False)
@@ -65,8 +73,11 @@ class Shell():
         self.screen.saveCursor()
         execute = False
         while self.status == constants.SHELL_STATUS_RUN:
+            # Set the terminal title
+            self.screen.title("jadsh %s" % os.getcwd())
+
             # Draw the screen
-            self.screen(self.prompt.title("jadsh %s" % os.getcwd()) if self.stdout.isatty() else "", self.prompt.generate(), self.user_input)
+            self.screen(self.prompt.generate(), self.user_input)
 
             # Keyboard input
             execute = self.keyboardInput()

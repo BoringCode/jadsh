@@ -15,7 +15,7 @@ def main(args = None):
 		print(constants.VERSION)
 		return
 
-	shell = Shell()
+	shell = Shell(args = args)
 
 if __name__ == "__main__":
     main()

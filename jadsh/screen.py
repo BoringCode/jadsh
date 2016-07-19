@@ -10,8 +10,10 @@ class Screen:
 		self.stderr = stderr
 
 		self.screen = ""
-
 		self.cursor = 0
+		self.terminal_length = 0
+
+		self.getTerminalSize()
 
 	def __call__(self, *argv):
 		self.draw(*argv)
@@ -34,10 +36,21 @@ class Screen:
 		if self.stdout.isatty():
 			self.write("\x1b8")
 
+	def getTerminalSize(self):
+		if self.stdout.isatty():
+			stty = os.popen('stty size', 'r')
+			self.rows, self.columns = stty.read().split()
+			stty.close()
+		else:
+			self.rows, self.columns = (-1, -1)
+		return (self.rows, self.columns)
+
 	def draw(self, *argv):
 		"""
 		Draw the terminal so the user can see it
 		"""
+		self.terminal_length = 0
+
 		if self.stdout.isatty():
 			# Reset cursor to previous position
 			# TODO: Handle edge case when current line is at the bottom of the terminal
@@ -54,6 +67,7 @@ class Screen:
 
 		# Output all args to the terminal
 		for arg in argv:
+			self.terminal_length += len(arg)
 			self.screenAppend(arg)
 
 		if self.stdout.isatty():
@@ -72,6 +86,10 @@ class Screen:
 		# Output everything to the screen
 		self.write(self.screen)
 		self.screen = ""
+
+	def title(self, title = "jadsh"):
+		if self.stdout.isatty():
+			self.write("\x1b]2;%s\x07", title)
 
 	def screenAppend(self, text):
 		"""

@@ -20,6 +20,3 @@ class Prompt():
         except:
             pass
         return self.pwd
-
-    def title(self, title = "jadsh"):
-        return "\x1b]2;%s\x07" % title
