@@ -92,7 +92,7 @@ class ShellTest(BaseShellTest):
 
 		self.runCommand("export %s=%s" % (variable_name, variable_value))
 
-		output = self.runCommand("echo $%s" % variable_name)[-2]
+		output = self.runCommand("echo $%s" % variable_name)[-3]
 		self.assertEqual(output, pwd, "Shell should substitute command with its output")
 
 	def test_command_substitution_chaining(self):

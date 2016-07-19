@@ -60,7 +60,7 @@ class BaseShellTest(unittest.TestCase):
 		for i in range(len(output)):
 			output[i] = output[i].strip()
 		# Remove all empty lines
-		output = list(filter(None, output))
+		#output = list(filter(None, output))
 		return output
 
 	def getcwd(self):

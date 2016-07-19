@@ -46,7 +46,7 @@ class Shell():
         try:
             # Start the main program loop
             self.loop()
-        except:
+        except Exception as e:
             self.message("jadsh error", "Fatal error, attempting to reload the shell")
             os.execvp("jadsh", ["jadsh"])
 
@@ -273,7 +273,7 @@ class Shell():
                 self.message(cmd[0], "command not found")
             except KeyboardInterrupt:
                 pass
-            self.last_status = int(os.environ["status"])
+            self.last_status = int(os.getenv("status", -1))
 
     def execute(self, tokens):
         """

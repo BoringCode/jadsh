@@ -68,18 +68,33 @@ class exportTest(BaseShellTest):
 		variable_name = self.randomString(5)
 		variable_value = self.randomString(10)
 
-		self.runCommand("export " + variable_name + "=" + variable_value)
+		self.runCommand("export %s=%s" % (variable_name, variable_value))
 
 		output = self.runCommand("echo $" + variable_name)
 
 		self.assertEqual(output[-2], variable_value, "export should export new variable to environment")
 
+	def test_multiple_values(self):
+		values = {
+			self.randomString(5): self.randomString(20),
+			self.randomString(20): "",
+			self.randomString(10): '"%s %s %s"' % (self.randomString(5), self.randomString(20), self.randomString(10))
+		}
+
+		command = "export"
+		for key in values:
+			command += " %s=%s" % (key, values[key])
+		self.runCommand(command)
+
+		for key in values:
+			self.assertEqual(values[key].strip('"\''), self.runCommand("echo $%s" % key)[-2], "export should export new variable to environment ($%s = %s)" % (key, values[key]))
+
 	def test_invalid_variable(self):
 		error_message = "export error: Can't export variables to environment"
-		variable_name = self.randomString(20, True)
+		variable_name = ".-dkjfd"
 		variable_value = self.randomString(10)
 
-		output = self.runCommand("export " + variable_name + "=" + variable_value)
+		output = self.runCommand("export %s=%s" % (variable_name, variable_value))
 		self.assertTrue(error_message in output, "export should only accept alphabet characters in variable")
 
 		output = self.runCommand("export " + self.randomString(20))
@@ -107,6 +122,13 @@ class andTest(BaseShellTest):
 
 		self.assertFalse(pwd in output, "`and` shouldn't run the command if the previous command failed")
 
+	def test_help(self):
+		help_message = "and -- conditionally execute a command"
+
+		output = self.runCommand("and --help")
+
+		self.assertTrue(help_message in output, "and --help should display help message")
+
 class orTest(BaseShellTest):
 	def test_good_prior_command(self):
 		pwd = os.getcwd()
@@ -121,6 +143,13 @@ class orTest(BaseShellTest):
 		output = self.runCommand("%s; or pwd" % bad_command)
 
 		self.assertEqual(pwd, output[-2], "`or` should run the command if the previous command failed")
+
+	def test_help(self):
+		help_message = "or -- conditionally execute a command"
+
+		output = self.runCommand("or --help")
+
+		self.assertTrue(help_message in output, "or --help should display help message")
 
 if __name__ == '__main__':
 	unittest.main()
