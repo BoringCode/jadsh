@@ -33,7 +33,7 @@ class cd(Builtin):
 			# Go back to previous directory
 			if (path == "-"):
 				if self.previous_directory is None:
-					self.message("cd", "Hit end of history...")
+					self.screen.message("cd", "Hit end of history...")
 					return constants.SHELL_STATUS_RUN
 				else:
 					path = self.previous_directory
@@ -41,7 +41,8 @@ class cd(Builtin):
 			try:
 				self.previous_directory = os.getcwd()
 			except:
-				self.previous_directory = path
+				self.previous_directory = None
+			# Expand ~ in the path
 			path = os.path.expanduser(path)
 			try:
 				os.chdir(path)
