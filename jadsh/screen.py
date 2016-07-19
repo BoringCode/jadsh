@@ -4,8 +4,7 @@ from jadsh.prompt import Prompt
 import jadsh.constants as constants
 
 class Screen:
-	def __init__(self, prompt = Prompt(), stdin = sys.stdin, stdout = sys.stdout, stderr = sys.stderr):
-		self.prompt = prompt
+	def __init__(self, stdin = sys.stdin, stdout = sys.stdout, stderr = sys.stderr):
 		self.stdin = stdin
 		self.stdout = stdout
 		self.stderr = stderr

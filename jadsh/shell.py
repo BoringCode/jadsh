@@ -34,7 +34,7 @@ class Shell():
         self.last_status = -1
 
         # The screen object
-        self.screen = Screen(self.prompt, self.stdin, self.stdout, self.stderr)
+        self.screen = Screen(stdin = self.stdin, stdout = self.stdout, stderr = self.stderr)
 
         # Grab individual characters from standard input
         self.getch = Getch(self.stdin)
