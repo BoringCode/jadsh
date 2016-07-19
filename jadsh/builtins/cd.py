@@ -34,7 +34,9 @@ class cd(Builtin):
 			if (path == "-"):
 				if self.previous_directory is None:
 					self.screen.message("cd", "Hit end of history...")
-					return constants.SHELL_STATUS_RUN
+					return {
+						"returncode": constants.SHELL_STATUS_RUN
+					}
 				else:
 					path = self.previous_directory
 			# Sometimes the user removes the previous directory which  is dumb
