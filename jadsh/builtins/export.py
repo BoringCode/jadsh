@@ -23,7 +23,7 @@ class export(Builtin):
 				if len(pair) <= 2 and self.pattern.match(pair[0]):
 					os.environ[str(pair[0])] = self.cleanToken(pair[1]) if len(pair) == 2 else ""
 				else:
-					self.message("export error", "Can't export variables to environment", False)
+					self.screen.message("export error", "Can't export variables to environment", False)
 		return {
 			"returncode": constants.SHELL_STATUS_RUN
 		}
@@ -41,4 +41,5 @@ class export(Builtin):
 
 	def show_environment(self):
 		for key in os.environ:
-			self.stdout.write("%s %s\n" % (str(key), str(os.environ[key])))
+			self.screen.write("%s %s\n", (str(key), str(os.environ[key])), False)
+		self.screen.flush()

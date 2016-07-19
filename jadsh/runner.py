@@ -1,4 +1,6 @@
 import os, re, sys, subprocess, importlib
+
+from jadsh.screen import Screen
 import jadsh.constants as constants
 
 class Runner:
@@ -10,6 +12,8 @@ class Runner:
 		self.stdin = stdin
 		self.stdout = stdout
 		self.stderr = stderr
+
+		self.screen = Screen()
 
 		self.builtins = {}
 		# Some builtins have odd names to account for Python keywords (e.g. _and)
@@ -47,13 +51,14 @@ class Runner:
 
 		# Check if builtin command
 		if self.builtin(command):
+			process = {}
 			try:
 				process = self.builtins[command].execute(*args)
-			except Exception as e:
-				self.message("%s error" % command, str(e))
+			except BaseException as e:
+				self.screen.message("%s error" % command, str(e))
 			obj = {
 				"stdout": process["stdout"] if "stdout" in process else None,
-				"status": process["returncode"] if "returncode" in process else None,
+				"status": process["returncode"] if "returncode" in process else 0,
 				"builtin": True
 			}
 		else:

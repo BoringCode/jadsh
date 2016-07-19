@@ -19,8 +19,7 @@ class exit(Builtin):
 				"returncode": constants.SHELL_STATUS_RUN
 			}
 		else:
-			self.stdout.write("\n" + "Bye!" + "\n")
-			self.stdout.flush()
+			self.screen.write("\n%s\n", "Bye!")
 			return {
 				"returncode": constants.SHELL_STATUS_STOP
 			}

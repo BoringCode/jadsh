@@ -42,7 +42,7 @@ class cd(Builtin):
 			try:
 				os.chdir(path)
 			except:
-				self.message("cd", "The directory \"%s\" does not exist" % path)
+				self.screen.message("cd", "The directory \"%s\" does not exist" % path)
 		return {
 			"returncode": constants.SHELL_STATUS_RUN
 		}

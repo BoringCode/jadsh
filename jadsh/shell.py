@@ -2,6 +2,7 @@ import sys
 import os
 import re
 
+from jadsh.screen import Screen
 from jadsh.parser import Parser
 from jadsh.runner import Runner
 from jadsh.getch import Getch
@@ -33,7 +34,7 @@ class Shell():
         self.last_status = -1
 
         # The screen object
-        self.screenObject = ""
+        self.screen = Screen(self.prompt, self.stdin, self.stdout, self.stderr)
 
         # Grab individual characters from standard input
         self.getch = Getch(self.stdin)
@@ -46,67 +47,14 @@ class Shell():
         try:
             # Start the main program loop
             self.loop()
-        except Exception as e:
-            self.message("jadsh error", "Fatal error, attempting to reload the shell")
+        except BaseException as e:
+            self.screen.message("jadsh error", "Fatal error, attempting to reload the shell")
+            self.screen.message("error", e)
             os.execvp("jadsh", ["jadsh"])
 
     def welcome(self):
-        self.stdout.write("Welcome to jadsh, Just Another Dumb SHell\n")
-        self.stdout.write("Type %s for instructions on how to use jadsh\n" % self.hilite("help", True))
-        self.stdout.flush()
-
-    def screenAppend(self, string):
-        """
-        Append new strings to the screen object
-        """
-        self.screenObject += str(string)
-
-    def drawScreen(self):
-        """
-        Draw the terminal so the user can see it
-        """
-        if self.stdout.isatty():
-            # Reset cursor to previous position
-            # TODO: Handle edge case when current line is at the bottom of the terminal
-            self.screenAppend("\x1b8")
-
-            # Hide the cursor
-            self.screenAppend("\x1b[?25l");
-
-            # Clear everything after the current line
-            self.screenAppend("\x1b[J\r")
-
-            # Save the current cursor position
-            self.screenAppend("\x1b7")
-
-            # Set the terminal title
-            title = self.prompt.title("jadsh %s" % os.getcwd())
-            self.screenAppend(title)
-
-        # Generate the prompt
-        prompt = self.prompt.generate()
-        self.screenAppend(prompt)
-
-        # Display the current input (what the user is typing)
-        self.screenAppend(self.user_input)
-
-        if self.stdout.isatty():
-            self.screenAppend("\x1b[?25h") # Show cursor
-
-            # Calculate cursor position and place at correct spot
-            # TODO: Handle edge case when user input goes to more than 1 line
-            position = len(self.user_input) - self.cursor_position
-            if position > 0:
-                # Move cursor backwards
-                self.screenAppend("\x1b[%sD" % str(position))
-
-        if not self.stdout.isatty():
-            self.screenAppend("\n")
-
-        # Output everything to the screen
-        self.stdout.write(self.screenObject)
-        self.stdout.flush()
-        self.screenObject = ""
+        self.screen.write("Welcome to jadsh, Just Another Dumb SHell\n", flush = False)
+        self.screen.write("Type %s for instructions on how to use jadsh\n" % self.screen.hilite("help", True))
 
     def loop(self):
         """
@@ -115,15 +63,11 @@ class Shell():
         Draws terminal screen, gets keyboard input, and executes programs as necessary
         """
         self.user_input = ""
-        self.cursor_position = 0
-        self.saveCursor()
+        self.screen.saveCursor()
+        execute = False
         while self.status == constants.SHELL_STATUS_RUN:
-            # Reset cursor position if current command is empty
-            if len(self.user_input) == 0 or self.cursor_position < 0: self.cursor_position = 0
-            if self.cursor_position > len(self.user_input): self.cursor_position = len(self.user_input)
-
             # Draw the screen
-            self.drawScreen()
+            self.screen(self.prompt.title("jadsh %s" % os.getcwd()) if self.stdout.isatty() else "", self.prompt.generate(), self.user_input)
 
             # Keyboard input
             execute = self.keyboardInput()
@@ -131,9 +75,8 @@ class Shell():
             # Execute flag has been set, send the current user input to be parsed
             if execute:
                 self.parse(self.user_input)
-                self.cursor_position = 0
                 self.user_input = ""
-                self.saveCursor()
+                self.screen.saveCursor()
 
     def keyboardInput(self):
         """
@@ -159,56 +102,53 @@ class Shell():
         # Escape sequence, handle appropriately
         if char_code >= constants.ARROW_UP:
             if char_code == constants.ARROW_LEFT:
-                if self.cursor_position > 0:
-                    self.cursor_position -= 1
+                self.screen.updateCursor(-1)
             elif char_code == constants.ARROW_RIGHT:
-                if self.cursor_position < len(self.user_input):
-                    self.cursor_position += 1
+                self.screen.updateCursor(1)
             # Move by words, rather than characters
             elif char_code == constants.CTRL_ARROW_LEFT:
-                if self.cursor_position > 0:
+                if self.screen.getCursor(self.user_input) > 0:
                     # Grab the string before the current cursor
-                    past_string = self.user_input[:self.cursor_position]
+                    past_string = self.user_input[:self.screen.getCursor(self.user_input)]
                     # Get a list of all the words in the string
                     words = past_string.split()
                     # Decrement the cursor by the length of the past string minus the last occurrence of the last word
                     # This handles unknown spaces that were stripped out by the split
-                    self.cursor_position -= len(past_string) - past_string.rfind(words[-1])
+                    self.screen.updateCursor(-(len(past_string) - past_string.rfind(words[-1])))
             elif char_code == constants.CTRL_ARROW_RIGHT:
-                if self.cursor_position < len(self.user_input):
+                if self.screen.getCursor(self.user_input) < len(self.user_input):
                     # Grab the string after the current cursor
-                    forward_string = self.user_input[self.cursor_position:]
+                    forward_string = self.user_input[self.screen.getCursor(self.user_input):]
                     # Get a list of all the words
                     words = forward_string.split()
                     # Increment the cursor position by the index of the found word plus its length
                     # Have to do this because of spaces (I don't know if there is a space in front of the word)
-                    self.cursor_position += forward_string.find(words[0]) + len(words[0])
+                    self.screen.updateCursor(forward_string.find(words[0]) + len(words[0]))
             # History
             elif char_code == constants.ARROW_UP:
                 if self.history_position < len(self.history):
                     self.history_position += 1
                     self.user_input = self.history[-self.history_position]["input"]
-                    self.cursor_position = len(self.user_input)
+                    self.screen.cursor = len(self.user_input)
             elif char_code == constants.ARROW_DOWN:
                 if self.history_position > 1:
                     self.history_position -= 1
                     self.user_input = self.history[-self.history_position]["input"]
-                    self.cursor_position = len(self.user_input)
+                    self.screen.cursor = len(self.user_input)
                 else:
                     self.history_position = 0
                     self.user_input = ""
-                    self.cursor_position = 0
             # Delete key
             elif char_code == constants.DEL_KEY:
                 if len(self.user_input) > 0:
                     # Reforms user input string based upon cursor position
-                    self.user_input = self.user_input[:self.cursor_position] + self.user_input[self.cursor_position + 1:]
+                    self.user_input = self.user_input[:self.screen.getCursor(self.user_input)] + self.user_input[self.screen.getCursor(self.user_input) + 1:]
             # Move cursor to end of line
             elif char_code == constants.END_KEY:
-                self.cursor_position = len(self.user_input)
+                self.screen.cursor = len(self.user_input)
             # Move cursor to beginning of line
             elif char_code == constants.HOME_KEY:
-                self.cursor_position = 0
+                self.screen.cursor = 0
             return execute
 
         # Convert ASCII code to actual character
@@ -221,11 +161,10 @@ class Shell():
         # Backspace
         if char_code == constants.BACKSPACE:
             if len(self.user_input) > 0:
-                self.user_input = self.user_input[:self.cursor_position - 1] + self.user_input[self.cursor_position:]
-                if self.cursor_position > 0: self.cursor_position -= 1
+                self.user_input = self.user_input[:self.screen.getCursor(self.user_input) - 1] + self.user_input[self.screen.getCursor(self.user_input):]
+                if self.screen.cursor > 0: self.screen.updateCursor(-1)
         # End of line
         elif char_code == constants.CTRL_C:
-            self.cursor_position = 0
             self.user_input = ""
         # End of input
         elif char_code == constants.CTRL_D:
@@ -234,9 +173,8 @@ class Shell():
         # Enter, execute the user input as a command
         elif char_code == constants.ENTER or char_code == constants.NEWLINE:
             execute = True
-            self.stdout.write("\n")
-            self.saveCursor()
-            self.stdout.flush()
+            self.screen.write("\n")
+            self.screen.saveCursor()
         elif char_code == constants.TAB:
             # Ignore tabs for now, eventually we will do tab completion
             execute = False
@@ -245,8 +183,8 @@ class Shell():
             execute = False
         # Regular input, add it to the user input at the cursor position
         else:
-            self.user_input = self.user_input[:self.cursor_position] + current_char + self.user_input[self.cursor_position:]
-            self.cursor_position += 1
+            self.user_input = self.user_input[:self.screen.getCursor(self.user_input)] + current_char + self.user_input[self.screen.getCursor(self.user_input):]
+            self.screen.updateCursor(1)
 
         return execute
 
@@ -257,8 +195,8 @@ class Shell():
         # Allow commands to be split (so user can enter multiple commands at once)
         try:
             commands = self.parser(string)
-        except Exception as e:
-            self.message("jadsh error", str(e))
+        except ValueError as e:
+            self.screen.message("jadsh error", str(e))
             return
 
         for cmd in commands:
@@ -270,7 +208,7 @@ class Shell():
             except OSError as e:
                 # Failed status
                 os.environ["status"] = str(constants.EXIT_CODE_NOT_FOUND)
-                self.message(cmd[0], "command not found")
+                self.screen.message(cmd[0], "command not found")
             except KeyboardInterrupt:
                 pass
             self.last_status = int(os.getenv("status", -1))
@@ -289,7 +227,7 @@ class Shell():
 
         results = self.runner(tokens)
 
-        self.saveCursor()
+        self.screen.saveCursor()
 
         # Builtins have the power to change the status of the shell
         if results["builtin"]:
@@ -297,38 +235,3 @@ class Shell():
 
         # Assume all went well, continue
         return constants.SHELL_STATUS_RUN
-
-    def message(self, title, message, status = False):
-        """
-        Display message in the terminal
-        """
-        self.stdout.write(self.hilite("%s: " % str(title), status))
-        self.stdout.write("%s\n" % str(message))
-        self.stdout.flush()
-        self.saveCursor()
-
-    def saveCursor(self):
-        if self.stdout.isatty():
-            self.stdout.write("\x1b7")
-
-    def resetCursor(self):
-        if self.stdout.isatty():
-            self.stdout.write("\x1b8")
-
-    def hilite(self, string, status = False, bold = False):
-        """
-        Generate bold, or colored string using ANSI escape codes
-
-        @return String
-        """
-        if not self.stdout.isatty(): return string
-        attr = []
-        if status:
-            # green
-            attr.append('32')
-        else:
-            # red
-            attr.append('31')
-        if bold:
-            attr.append('1')
-        return '\x1b[%sm%s\x1b[0m' % (';'.join(attr), string)
