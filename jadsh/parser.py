@@ -52,6 +52,9 @@ class Parser:
 		escaped = False
 		substitution = False
 
+		# Don't parse an empty string
+		if len(instream) == 0: return commands
+
 		# Check syntax before running through tokenizer
 		# Will raise errors which must be caught
 		if not self.check_syntax(instream): return commands
