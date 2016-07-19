@@ -47,7 +47,10 @@ class Runner:
 
 		# Check if builtin command
 		if self.builtin(command):
-			process = self.builtins[command].execute(*args)
+			try:
+				process = self.builtins[command].execute(*args)
+			except Exception as e:
+				self.message("%s error" % command, str(e))
 			obj = {
 				"stdout": process["stdout"] if "stdout" in process else None,
 				"status": process["returncode"] if "returncode" in process else None,
