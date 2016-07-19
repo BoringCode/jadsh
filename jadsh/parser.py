@@ -107,7 +107,7 @@ class Parser:
 						for cmd in self.read_tokens(substitution_string):
 							output = self.runner(cmd, True)
 							if output["stdout"]:
-								token += output["stdout"].read().decode("utf-8")
+								token += output["stdout"].read().decode("utf-8").strip()
 								output["stdout"].close()
 				# Add paren to token if the stack has parens in it already
 				# This ensures that the paren is preserved if it is wrapped in parens already
